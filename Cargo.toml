@@ -8,10 +8,10 @@ edition = "2021"
 [dependencies]
 clap = "4.4.11"
 env = "0.0.0"
-folders = "0.1.0"
 log = "0.4.20"
 pretty_env_logger = "0.5.0"
 reqwest = "0.11.23"
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
+tokio = { version = "1.35.1", features = ["full"] }
 trace = "0.1.7"
