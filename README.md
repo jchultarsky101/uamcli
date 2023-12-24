@@ -260,4 +260,4 @@ Use this space to list resources you find helpful and would like to give credit 
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
 [JQuery-url]: https://jquery.com 
 [Rust-url]: https://www.rust-lang.org/
-[Rust-logo]: http://rust-lang.org/logos/rust-logo-256x256.png
+[Rust-logo]: http://rust-lang.org/logos/rust-logo-blk.svg
