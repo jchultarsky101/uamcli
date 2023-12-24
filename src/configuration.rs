@@ -1,5 +1,6 @@
+use crate::security::{Keyring, KeyringError};
 use dirs::config_dir;
-use keyring::Entry;
+use log;
 use serde::{Deserialize, Serialize};
 use serde_yaml;
 use std::{
@@ -7,10 +8,11 @@ use std::{
     io::Write,
     path::PathBuf,
 };
-use thiserror::Error;
 
 pub const DEFAULT_APPLICATION_ID: &'static str = "uamcli";
+pub const DEFAULT_PROJECT_ID: &'static str = "default";
 pub const DEFAULT_CONFIGURATION_FILE_NAME: &'static str = "config.yml";
+pub const DEFAULT_CLIENT_SECRET_KEY: &'static str = "client_secret";
 
 #[derive(Debug, thiserror::Error)]
 pub enum ConfigurationError {
@@ -22,32 +24,41 @@ pub enum ConfigurationError {
     FailedToWriteData { cause: Box<dyn std::error::Error> },
     #[error("missing value for property \"{name:?}\"")]
     MissingRequiredPropertyValue { name: String },
-    #[error("unknown tenant \"{tenant_id:?}\"")]
-    UnknownTenant { tenant_id: String },
     #[error("credentials not provided")]
     CredentialsNotProvided,
     #[error("security error {0}")]
     KeyringError(#[from] KeyringError),
+    #[error("input/output error")]
+    InputOutput(#[from] std::io::Error),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Configuration {
-    client_id: String,
-    client_secret: String,
     project_id: String,
+    client_id: Option<String>,
+    #[serde(skip_serializing)]
+    client_secret: Option<String>,
 }
 
 impl Default for Configuration {
     fn default() -> Self {
-        Self {
-            client_id: String::new(),
-            client_secret: String::new(),
-            project_id: String::new(),
-        }
+        Self::new(DEFAULT_PROJECT_ID.to_string(), None, None)
     }
 }
 
 impl Configuration {
+    pub fn new(
+        project_id: String,
+        client_id: Option<String>,
+        client_secret: Option<String>,
+    ) -> Configuration {
+        Self {
+            project_id,
+            client_id,
+            client_secret,
+        }
+    }
+
     pub fn project_id(&self) -> String {
         self.project_id.to_owned()
     }
@@ -56,20 +67,24 @@ impl Configuration {
         self.project_id = project_id;
     }
 
-    pub fn client_id(&self) -> String {
+    pub fn client_id(&self) -> Option<String> {
         self.client_id.to_owned()
     }
 
-    pub fn set_client_id(&mut self, client_id: String) {
+    pub fn set_client_id(&mut self, client_id: Option<String>) {
         self.client_id = client_id;
     }
 
-    pub fn client_secret(&self) -> String {
-        self.client_secret.to_owned()
+    pub fn set_client_secret(
+        &mut self,
+        client_secret: Option<String>,
+    ) -> Result<(), ConfigurationError> {
+        self.client_secret = client_secret.to_owned();
+        Ok(())
     }
 
-    pub fn set_client_secret(&mut self, client_secret: String) {
-        self.client_secret = client_secret;
+    pub fn client_secret(&self) -> Option<String> {
+        self.client_secret.to_owned()
     }
 
     pub fn get_default_configuration_file_path() -> Result<PathBuf, ConfigurationError> {
@@ -100,19 +115,34 @@ impl Configuration {
     }
 
     pub fn load_from_file(path: PathBuf) -> Result<Configuration, ConfigurationError> {
-        match fs::read_to_string(path.clone()) {
-            Ok(configuration) => {
-                let configuration = serde_yaml::from_str(&configuration);
-                match configuration {
-                    Ok(configuration) => Ok(configuration),
-                    Err(cause) => Err(ConfigurationError::FailedToLoadData {
-                        cause: Box::new(cause),
-                    }),
-                }
-            }
+        // read the configuration from a file
+        let result = match fs::read_to_string(path.clone()) {
+            Ok(configuration) => match serde_yaml::from_str::<Configuration>(&configuration) {
+                Ok(configuration) => Ok(configuration),
+                Err(cause) => Err(ConfigurationError::FailedToLoadData {
+                    cause: Box::new(cause),
+                }),
+            },
             Err(cause) => Err(ConfigurationError::FailedToLoadData {
                 cause: Box::new(cause),
             }),
+        };
+
+        // read the client secret from the keystore
+        match result {
+            Ok(configuration) => {
+                let mut configuration = configuration.clone();
+                let keyring =
+                    Keyring::new(DEFAULT_APPLICATION_ID, configuration.project_id.as_str());
+                match keyring.get(DEFAULT_CLIENT_SECRET_KEY)? {
+                    Some(secret) => {
+                        configuration.client_secret = Some(secret);
+                        Ok(configuration)
+                    }
+                    None => Err(ConfigurationError::CredentialsNotProvided),
+                }
+            }
+            Err(e) => Err(e),
         }
     }
 
@@ -137,57 +167,34 @@ impl Configuration {
             None => return Err(ConfigurationError::FailedToFindConfigurationDirectory),
         }
 
+        // write to file
         let file = File::create(&path);
         match file {
             Ok(file) => {
                 let writer: Box<dyn Write> = Box::new(file);
-                Ok(self.write(writer)?)
+                self.write(writer)?;
             }
-            Err(e) => Err(ConfigurationError::FailedToWriteData { cause: Box::new(e) }),
+            Err(e) => return Err(ConfigurationError::FailedToWriteData { cause: Box::new(e) }),
+        };
+
+        // write the secret to the keystore
+        if let Some(secret) = &self.client_secret {
+            let keyring = Keyring::new(DEFAULT_APPLICATION_ID, &self.project_id);
+            keyring.put(DEFAULT_CLIENT_SECRET_KEY, secret.as_str())?;
         }
+
+        Ok(())
     }
 
     pub fn save_to_default(&self) -> Result<(), ConfigurationError> {
         self.save(&Self::get_default_configuration_file_path()?)
     }
-}
 
-#[derive(Debug, Error)]
-pub enum KeyringError {
-    #[error("keyring error")]
-    CannotAccessKeyringEntity(#[from] keyring::Error),
-}
+    pub fn delete(&self) -> Result<(), ConfigurationError> {
+        fs::remove_file(&Self::get_default_configuration_file_path()?)?;
 
-pub struct Keyring {}
-
-impl Default for Keyring {
-    fn default() -> Keyring {
-        Keyring {}
-    }
-}
-
-impl Keyring {
-    fn get_entry(&self, key: &String) -> Result<Entry, KeyringError> {
-        Ok(Entry::new(DEFAULT_APPLICATION_ID, key.as_str())?)
-    }
-
-    pub fn get(&self, key: &String) -> Result<Option<String>, KeyringError> {
-        match self.get_entry(key)?.get_password() {
-            Ok(value) => Ok(Some(value)),
-            Err(e) => match e {
-                keyring::Error::NoEntry => Ok(None),
-                _ => Err(KeyringError::from(e)),
-            },
-        }
-    }
-
-    pub fn put(&self, key: &String, value: String) -> Result<(), KeyringError> {
-        self.get_entry(key)?.set_password(value.as_str())?;
-        Ok(())
-    }
-
-    pub fn delete(&self, key: &String) -> Result<(), KeyringError> {
-        self.get_entry(key)?.delete_password()?;
+        let keyring = Keyring::new(DEFAULT_APPLICATION_ID, &self.project_id);
+        keyring.delete(DEFAULT_CLIENT_SECRET_KEY)?;
         Ok(())
     }
 }

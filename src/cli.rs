@@ -106,6 +106,9 @@ impl Cli {
                         Command::new(COMMAND_EXPORT)
                             .about("export the current configuration in a file")
                             .arg(output_file_parameter),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_DELETE).about("deletes the configuration file"),
                     ),
             )
             .get_matches()
@@ -150,8 +153,8 @@ impl Cli {
                         let mut configuration = configuration.borrow_mut();
 
                         configuration.set_project_id(project_id.to_owned());
-                        configuration.set_client_id(client_id.to_owned());
-                        configuration.set_client_secret(client_secret.to_owned());
+                        configuration.set_client_id(Some(client_id.to_owned()));
+                        configuration.set_client_secret(Some(client_secret.to_owned()))?;
 
                         configuration.save_to_default()?;
                     }
@@ -160,6 +163,9 @@ impl Cli {
                 Some((COMMAND_EXPORT, sub_matches)) => {
                     let path = sub_matches.get_one::<PathBuf>(PARAMETER_OUTPUT).unwrap(); // it is save vefause the argument is mandatory
                     api.configuration().borrow().save(path)?;
+                }
+                Some((COMMAND_DELETE, _)) => {
+                    api.configuration().borrow().delete()?;
                 }
                 _ => unreachable!("Invalid subcommand for 'config set"),
             },
