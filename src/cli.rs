@@ -27,6 +27,13 @@ pub const PARAMETER_CLIENT_ID: &str = "client_id";
 pub const PARAMETER_CLIENT_SECRET: &str = "client_secret";
 pub const PARAMETER_PROJECT_ID: &str = "project";
 
+const BANNER: &'static str = r#"
+╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
+║ ║╠═╣║║║  ║  ║  ║
+╚═╝╩ ╩╩ ╩  ╚═╝╩═╝╩
+
+"#;
+
 #[derive(Debug, Error)]
 pub enum CliError {
     #[error("Configuration Error")]
@@ -72,6 +79,7 @@ impl Cli {
             .version(env!("CARGO_PKG_VERSION"))
             .author(env!("CARGO_PKG_AUTHORS"))
             .about(env!("CARGO_PKG_DESCRIPTION"))
+            .before_long_help(BANNER)
             .propagate_version(true)
             .subcommand_required(true)
             .arg_required_else_help(true)
