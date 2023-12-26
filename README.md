@@ -101,66 +101,69 @@ This project is built with the wonderful programming language Rust.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+We provide pre-compiled binaries for MacOS and Windows. If you need to execute it on another platform, you can compile from source, or open an issue and we will be happy to provide.
+
+The application runs in the terminal. Therefore, you must have a terminal client and know how to use it.
 
 ### Installation
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
+_The following are instructions on how to install the pre-compiled binary_
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
+1. Download the binary for your platform from the link listed under the latest release
+2. Move the binary file to a desired directory on your computer
+3. (Optional) Add the binary to your PATH or create an alias for it to make it easy to execute from any directory
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+UAMCLI is a command line utility program. You execute it in the terminal. 
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+For example, to run it in a BASH shell:
+
+````bash
+uamcli
+Command Line Interface for the Unity Asset Manager
+
+Usage: uamcli <COMMAND>
+
+Commands:
+  config  working with configuration
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help (see more with '--help')
+  -V, --version  Print version
+````
+
+If no command line arguments are provided, it will display the Usage help. You can see the available commands. The same text will be displayed if you provide the command 'help' as argument:
+
+````bash
+uamcli help
+````
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
+_The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch._
 
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
+- [x] Add Changelog
+- [ ] Add login/logoff functions
+- [ ] Implement project operations
+- [ ] Implement file operations
+- [ ] Create documentation via Github Pages
+
+See the [open issues](https://github.com/jchultarsky101/uamcli/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -194,7 +197,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
 
-Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
+Project Link: [https://github.com/jchultarsky101/uamcli](https://github.com/jchultarsky101/uamcli)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
