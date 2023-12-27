@@ -21,7 +21,8 @@ async fn main() -> Result<(), UamCliError> {
     let _log_init_result = pretty_env_logger::try_init_timed();
     let configuration = RefCell::new(Configuration::load_default().unwrap_or_default());
 
-    Cli::default().execute_command(Api::new(&configuration))?;
+    let api = Api::new(&configuration);
+    Cli::default().execute_command(api).await?;
 
     Ok(())
 }

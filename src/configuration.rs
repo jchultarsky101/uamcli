@@ -10,7 +10,8 @@ use std::{
 };
 
 pub const DEFAULT_APPLICATION_ID: &'static str = "uamcli";
-pub const DEFAULT_PROJECT_ID: &'static str = "default";
+pub const DEFAULT_PROJECT_ID: &'static str = "";
+pub const DEFAULT_ENVIRONMENT_ID: &'static str = "";
 pub const DEFAULT_CONFIGURATION_FILE_NAME: &'static str = "config.yml";
 pub const DEFAULT_CLIENT_SECRET_KEY: &'static str = "client_secret";
 
@@ -35,6 +36,8 @@ pub enum ConfigurationError {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Configuration {
     project_id: String,
+    environment_id: String,
+    account: Option<String>,
     client_id: Option<String>,
     #[serde(skip_serializing)]
     client_secret: Option<String>,
@@ -42,21 +45,39 @@ pub struct Configuration {
 
 impl Default for Configuration {
     fn default() -> Self {
-        Self::new(DEFAULT_PROJECT_ID.to_string(), None, None)
+        Self::new(
+            DEFAULT_ENVIRONMENT_ID.to_string(),
+            DEFAULT_PROJECT_ID.to_string(),
+            None,
+            None,
+            None,
+        )
     }
 }
 
 impl Configuration {
     pub fn new(
+        environment_id: String,
         project_id: String,
+        account: Option<String>,
         client_id: Option<String>,
         client_secret: Option<String>,
     ) -> Configuration {
         Self {
+            environment_id,
             project_id,
+            account,
             client_id,
             client_secret,
         }
+    }
+
+    pub fn environment_id(&self) -> String {
+        self.environment_id.to_owned()
+    }
+
+    pub fn set_environment_id(&mut self, environment_id: String) {
+        self.environment_id = environment_id.to_owned();
     }
 
     pub fn project_id(&self) -> String {
@@ -65,6 +86,14 @@ impl Configuration {
 
     pub fn set_project_id(&mut self, project_id: String) {
         self.project_id = project_id;
+    }
+
+    pub fn account(&self) -> Option<String> {
+        self.account.to_owned()
+    }
+
+    pub fn set_account(&mut self, account: Option<String>) {
+        self.account = account;
     }
 
     pub fn client_id(&self) -> Option<String> {

@@ -22,10 +22,12 @@ pub const COMMAND_FOLDER: &str = "folder";
 
 pub const PARAMETER_OUTPUT: &str = "output";
 pub const PARAMETER_API_URL: &str = "api_url";
+pub const PARAMETER_ACCOUNT: &str = "account";
 pub const PARAMETER_OIDC_URL: &str = "oidc_url";
 pub const PARAMETER_CLIENT_ID: &str = "client_id";
 pub const PARAMETER_CLIENT_SECRET: &str = "client_secret";
 pub const PARAMETER_PROJECT_ID: &str = "project";
+pub const PARAMETER_ENVIRONMENT_ID: &str = "environment";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -38,8 +40,8 @@ const BANNER: &'static str = r#"
 pub enum CliError {
     #[error("Configuration Error")]
     ConfigurationError(#[from] ConfigurationError),
-    #[error("Generic")]
-    Generic,
+    #[error("API error")]
+    ApiError(#[from] crate::api::ApiError),
 }
 
 impl Default for Cli {
@@ -75,6 +77,16 @@ impl Cli {
             .required(true)
             .help("Client secret for authentication");
 
+        let account_parameter = Arg::new(PARAMETER_ACCOUNT)
+            .long(PARAMETER_ACCOUNT)
+            .required(true)
+            .help("Service account name");
+
+        let environment_id_parameter = Arg::new(PARAMETER_ENVIRONMENT_ID)
+            .long(PARAMETER_ENVIRONMENT_ID)
+            .required(true)
+            .help("Unity environment ID");
+
         Command::new(env!("CARGO_PKG_NAME"))
             .version(env!("CARGO_PKG_VERSION"))
             .author(env!("CARGO_PKG_AUTHORS"))
@@ -105,7 +117,9 @@ impl Cli {
                             .subcommand(
                                 Command::new(COMMAND_CLIENT)
                                     .about("Sets the clinet properties")
-                                    .arg(project_id_parameter.clone())
+                                    .arg(project_id_parameter)
+                                    .arg(environment_id_parameter)
+                                    .arg(account_parameter)
                                     .arg(client_id_parameter)
                                     .arg(client_secret_parameter),
                             ),
@@ -119,6 +133,11 @@ impl Cli {
                         Command::new(COMMAND_DELETE).about("deletes the configuration file"),
                     ),
             )
+            .subcommand(
+                // Login
+                Command::new(COMMAND_LOGIN).about("logins the user and creates a new session"),
+            )
+            .subcommand(Command::new(COMMAND_LOGOFF).about("terminates the current session"))
             .get_matches()
     }
 
@@ -129,7 +148,7 @@ impl Cli {
     ///
     /// * api - configured API object
     ///
-    pub fn execute_command(&self, api: Api) -> Result<(), CliError> {
+    pub async fn execute_command(&self, mut api: Api) -> Result<(), CliError> {
         match self.prepare_commands().subcommand() {
             // configuration commands and their parameters
             Some((COMMAND_CONFIG, sub_matches)) => match sub_matches.subcommand() {
@@ -152,6 +171,10 @@ impl Cli {
                     Some((COMMAND_CLIENT, sub_matches)) => {
                         let project_id =
                             sub_matches.get_one::<String>(PARAMETER_PROJECT_ID).unwrap(); // unwraps here are safe, because the arguments is mandatory and it will caught by Clap before this point
+                        let environment_id = sub_matches
+                            .get_one::<String>(PARAMETER_ENVIRONMENT_ID)
+                            .unwrap();
+                        let account = sub_matches.get_one::<String>(PARAMETER_ACCOUNT).unwrap();
                         let client_id = sub_matches.get_one::<String>(PARAMETER_CLIENT_ID).unwrap();
                         let client_secret = sub_matches
                             .get_one::<String>(PARAMETER_CLIENT_SECRET)
@@ -161,6 +184,8 @@ impl Cli {
                         let mut configuration = configuration.borrow_mut();
 
                         configuration.set_project_id(project_id.to_owned());
+                        configuration.set_environment_id(environment_id.to_owned());
+                        configuration.set_account(Some(account.to_owned()));
                         configuration.set_client_id(Some(client_id.to_owned()));
                         configuration.set_client_secret(Some(client_secret.to_owned()))?;
 
@@ -177,6 +202,12 @@ impl Cli {
                 }
                 _ => unreachable!("Invalid subcommand for 'config set"),
             },
+            Some((COMMAND_LOGIN, _submatches)) => {
+                api.login().await?;
+            }
+            Some((COMMAND_LOGOFF, _submatches)) => {
+                api.logoff()?;
+            }
 
             // Login operations
 

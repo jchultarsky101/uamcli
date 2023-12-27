@@ -1811,6 +1811,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "strfmt"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a8348af2d9fc3258c8733b8d9d8db2e56f54b2363a4b5b81585c7875ed65e65"
+
+[[package]]
 name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2052,6 +2058,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 name = "uamcli"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "clap",
  "configuration",
  "dirs",
@@ -2063,6 +2070,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "strfmt",
  "thiserror",
  "tokio",
 ]
