@@ -1,6 +1,6 @@
 use base64::{engine::general_purpose, Engine};
 use reqwest::{Client as HttpClient, StatusCode};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::{collections::HashMap, time::Duration};
 use strfmt::strfmt;
 use thiserror::Error;
@@ -38,6 +38,7 @@ struct AuthenticationResponse {
 }
 
 const UNITY_TOKEN_EXCHANGE_URL: &'static str = "https://services.api.unity.com/auth/v1/token-exchange?projectId={PROJECT_ID}&environmentId={ENVIRONMENT_ID}";
+const UNITY_PRODUCTION_SERVICES_BASE_URL: &'static str = "https://services.api.unity.com";
 
 #[derive(Debug)]
 pub struct Client {
@@ -123,6 +124,63 @@ impl Client {
                             let token = response.access_token;
                             self.access_token = Some(token.to_owned());
                             Ok(token)
+                        }
+                        Err(_) => Err(ClientError::UnexpectedResponse(status)),
+                    }
+                } else {
+                    Err(ClientError::UnexpectedResponse(status))
+                }
+            }
+            Err(_) => Err(ClientError::FailedToObtainToken),
+        }
+    }
+
+    pub async fn search_asset(&self) -> Result<(), ClientError> {
+        if self.access_token.is_none() {
+            return Err(ClientError::Unauthorized);
+        }
+        let access_token = self.access_token.clone().unwrap();
+
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/assets/search",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        log::trace!("POST {}", url);
+
+        let response = self
+            .http
+            .post(url)
+            .header("cache-control", "no-cache")
+            .header("content-length", 0)
+            .timeout(Duration::from_secs(30))
+            .bearer_auth(access_token.to_owned())
+            .send()
+            .await;
+
+        match response {
+            Ok(response) => {
+                let status = response.status();
+
+                if status.is_success() {
+                    let response_text = response.text().await;
+                    match response_text {
+                        Ok(response_text) => {
+                            log::trace!("RESPONSE: {}", response_text.to_owned());
+                            /*
+                                                        let response: AuthenticationResponse =
+                                                            serde_yaml::from_str(&response_text).unwrap();
+                                                        let token = response.access_token;
+                                                        self.access_token = Some(token.to_owned());
+                                                        Ok(token)
+                            */
+
+                            Ok(())
                         }
                         Err(_) => Err(ClientError::UnexpectedResponse(status)),
                     }
