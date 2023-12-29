@@ -1,12 +1,48 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialOrd, PartialEq, Serialize, Deserialize)]
-pub struct Asset {
+#[derive(Debug, PartialEq, PartialOrd, Clone, Serialize, Deserialize)]
+pub struct AssetIdentity {
     id: String,
-    name: String,
     version: String,
-    tags: Vec<String>,
-    system_tags: Vec<String>,
+}
+
+impl AssetIdentity {
+    pub fn new(id: String, version: String) -> Self {
+        AssetIdentity { id, version }
+    }
+
+    pub fn id(&self) -> String {
+        self.id.to_owned()
+    }
+
+    pub fn set_id(&mut self, id: String) {
+        self.id = id.to_owned();
+    }
+
+    pub fn version(&self) -> String {
+        self.version.to_owned()
+    }
+
+    pub fn set_version(&mut self, version: String) {
+        self.version = version.to_owned();
+    }
+}
+
+#[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Dataset {
+    #[serde(rename = "datasetId")]
+    id: String,
+    #[serde(rename = "name")]
+    name: String,
+}
+
+#[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Asset {
+    identity: AssetIdentity,
+    name: String,
+    description: Option<String>,
+    tags: Option<Vec<String>>,
+    system_tags: Option<Vec<String>>,
     labels: Vec<String>,
     primary_type: String,
     status: String,
@@ -15,15 +51,16 @@ pub struct Asset {
     project_ids: Vec<String>,
     preview_file: Option<String>,
     preview_file_dataset_id: Option<String>,
+    datasets: Vec<Dataset>,
 }
 
 impl Asset {
     pub fn new(
-        id: String,
+        identity: AssetIdentity,
         name: String,
-        version: String,
-        tags: Vec<String>,
-        system_tags: Vec<String>,
+        description: Option<String>,
+        tags: Option<Vec<String>>,
+        system_tags: Option<Vec<String>>,
         labels: Vec<String>,
         primary_type: String,
         status: String,
@@ -32,11 +69,12 @@ impl Asset {
         project_ids: Vec<String>,
         preview_file: Option<String>,
         preview_file_dataset_id: Option<String>,
+        datasets: Vec<Dataset>,
     ) -> Self {
         Asset {
-            id,
+            identity,
             name,
-            version,
+            description,
             tags,
             system_tags,
             labels,
@@ -47,15 +85,16 @@ impl Asset {
             project_ids,
             preview_file,
             preview_file_dataset_id,
+            datasets,
         }
     }
 
-    pub fn id(&self) -> String {
-        self.id.to_owned()
+    pub fn identity(&self) -> AssetIdentity {
+        self.identity.to_owned()
     }
 
-    pub fn set_id(&mut self, id: String) {
-        self.id = id.to_string();
+    pub fn set_id(&mut self, identity: AssetIdentity) {
+        self.identity = identity.to_owned();
     }
 
     pub fn name(&self) -> String {
@@ -66,27 +105,27 @@ impl Asset {
         self.name = name.to_owned();
     }
 
-    pub fn version(&self) -> String {
-        self.version.to_owned()
+    pub fn description(&self) -> Option<String> {
+        self.description.to_owned()
     }
 
-    pub fn set_version(&mut self, version: String) {
-        self.version = version.to_owned();
+    pub fn set_description(&mut self, description: Option<String>) {
+        self.description = description.to_owned();
     }
 
-    pub fn tags(&self) -> Vec<String> {
+    pub fn tags(&self) -> Option<Vec<String>> {
         self.tags.clone()
     }
 
-    pub fn set_tabs(&mut self, tags: Vec<String>) {
+    pub fn set_tabs(&mut self, tags: Option<Vec<String>>) {
         self.tags = tags.clone();
     }
 
-    pub fn system_tags(&self) -> Vec<String> {
+    pub fn system_tags(&self) -> Option<Vec<String>> {
         self.system_tags.clone()
     }
 
-    pub fn set_system_tags(&mut self, system_tags: Vec<String>) {
+    pub fn set_system_tags(&mut self, system_tags: Option<Vec<String>>) {
         self.system_tags = system_tags.clone();
     }
 
@@ -152,5 +191,13 @@ impl Asset {
 
     pub fn set_preview_file_dataset_id(&mut self, preview_file_dataset_id: Option<String>) {
         self.preview_file_dataset_id = preview_file_dataset_id.to_owned();
+    }
+
+    pub fn datasets(&self) -> Vec<Dataset> {
+        self.datasets.clone()
+    }
+
+    pub fn set_datasets(&mut self, datasets: Vec<Dataset>) {
+        self.datasets = datasets.clone();
     }
 }

@@ -1,4 +1,8 @@
-use crate::{client::Client, configuration::Configuration, model::Asset};
+use crate::{
+    client::Client,
+    configuration::Configuration,
+    model::{Asset, AssetIdentity},
+};
 use std::cell::RefCell;
 use thiserror::Error;
 
@@ -61,11 +65,33 @@ impl Api {
         todo!("Implement logoff");
     }
 
-    pub async fn search(&mut self) -> Result<Vec<Asset>, ApiError> {
+    pub async fn search_asset(&mut self) -> Result<Vec<Asset>, ApiError> {
         self.init().await?;
         log::trace!("Searching for assets...");
         match &self.client {
             Some(client) => Ok(client.search_asset().await?),
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
+    pub async fn create_asset(
+        &mut self,
+        name: String,
+        description: Option<String>,
+    ) -> Result<AssetIdentity, ApiError> {
+        self.init().await?;
+        log::trace!("Creating asset {}...", name.to_owned());
+        match &self.client {
+            Some(client) => Ok(client.create_asset(name, description).await?),
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
+    pub async fn get_asset(&mut self, identity: &AssetIdentity) -> Result<Option<Asset>, ApiError> {
+        self.init().await?;
+        log::trace!("Retrieving asset {}...", identity.id());
+        match &self.client {
+            Some(client) => Ok(client.get_asset(identity).await?),
             None => Err(ApiError::ClientNotInitialized),
         }
     }

@@ -37,7 +37,6 @@ pub enum ConfigurationError {
 pub struct Configuration {
     project_id: String,
     environment_id: String,
-    account: Option<String>,
     client_id: Option<String>,
     #[serde(skip_serializing)]
     client_secret: Option<String>,
@@ -50,7 +49,6 @@ impl Default for Configuration {
             DEFAULT_PROJECT_ID.to_string(),
             None,
             None,
-            None,
         )
     }
 }
@@ -59,14 +57,12 @@ impl Configuration {
     pub fn new(
         environment_id: String,
         project_id: String,
-        account: Option<String>,
         client_id: Option<String>,
         client_secret: Option<String>,
     ) -> Configuration {
         Self {
             environment_id,
             project_id,
-            account,
             client_id,
             client_secret,
         }
@@ -86,14 +82,6 @@ impl Configuration {
 
     pub fn set_project_id(&mut self, project_id: String) {
         self.project_id = project_id;
-    }
-
-    pub fn account(&self) -> Option<String> {
-        self.account.to_owned()
-    }
-
-    pub fn set_account(&mut self, account: Option<String>) {
-        self.account = account;
     }
 
     pub fn client_id(&self) -> Option<String> {

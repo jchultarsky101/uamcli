@@ -1,6 +1,7 @@
 use crate::{
     api::Api,
     configuration::{Configuration, ConfigurationError},
+    model::AssetIdentity,
 };
 use clap::{Arg, ArgMatches, Command};
 use std::path::PathBuf;
@@ -8,28 +9,28 @@ use thiserror::Error;
 
 pub struct Cli {}
 
-pub const COMMAND_CONFIG: &str = "config";
-pub const COMMAND_EXPORT: &str = "export";
-pub const COMMAND_GET: &str = "get";
-pub const COMMAND_PATH: &str = "path";
-pub const COMMAND_SET: &str = "set";
-pub const COMMAND_DELETE: &str = "delete";
-pub const COMMAND_CLIENT: &str = "client";
-pub const COMMAND_FOLDERS: &str = "folders";
-pub const COMMAND_LOGIN: &str = "login";
-pub const COMMAND_LOGOFF: &str = "logoff";
-pub const COMMAND_FOLDER: &str = "folder";
-pub const COMMAND_ASSET: &str = "asset";
-pub const COMMAND_SEARCH: &str = "search";
+const COMMAND_CONFIG: &str = "config";
+const COMMAND_EXPORT: &str = "export";
+const COMMAND_GET: &str = "get";
+const COMMAND_PATH: &str = "path";
+const COMMAND_SET: &str = "set";
+const COMMAND_CREATE: &str = "create";
+const COMMAND_DELETE: &str = "delete";
+const COMMAND_CLIENT: &str = "client";
+//const COMMAND_LOGIN: &str = "login";
+//const COMMAND_LOGOFF: &str = "logoff";
+const COMMAND_ASSET: &str = "asset";
+const COMMAND_SEARCH: &str = "search";
 
-pub const PARAMETER_OUTPUT: &str = "output";
-pub const PARAMETER_API_URL: &str = "api_url";
-pub const PARAMETER_ACCOUNT: &str = "account";
-pub const PARAMETER_OIDC_URL: &str = "oidc_url";
-pub const PARAMETER_CLIENT_ID: &str = "client_id";
-pub const PARAMETER_CLIENT_SECRET: &str = "client_secret";
-pub const PARAMETER_PROJECT_ID: &str = "project";
-pub const PARAMETER_ENVIRONMENT_ID: &str = "environment";
+const PARAMETER_OUTPUT: &str = "output";
+const PARAMETER_CLIENT_ID: &str = "client_id";
+const PARAMETER_CLIENT_SECRET: &str = "client_secret";
+const PARAMETER_PROJECT_ID: &str = "project";
+const PARAMETER_ENVIRONMENT_ID: &str = "environment";
+const PARAMETER_NAME: &str = "name";
+const PARAMETER_DESCRIPTION: &str = "description";
+const PARAMETER_ID: &str = "id";
+const PARAMETER_ASSET_VERSION: &str = "asset-version";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -79,11 +80,6 @@ impl Cli {
             .required(true)
             .help("Client secret for authentication");
 
-        let account_parameter = Arg::new(PARAMETER_ACCOUNT)
-            .long(PARAMETER_ACCOUNT)
-            .required(true)
-            .help("Service account name");
-
         let environment_id_parameter = Arg::new(PARAMETER_ENVIRONMENT_ID)
             .long(PARAMETER_ENVIRONMENT_ID)
             .required(true)
@@ -121,7 +117,6 @@ impl Cli {
                                     .about("Sets the clinet properties")
                                     .arg(project_id_parameter)
                                     .arg(environment_id_parameter)
-                                    .arg(account_parameter)
                                     .arg(client_id_parameter)
                                     .arg(client_secret_parameter),
                             ),
@@ -135,7 +130,46 @@ impl Cli {
                         Command::new(COMMAND_DELETE).about("deletes the configuration file"),
                     ),
             )
-            .subcommand(Command::new(COMMAND_ASSET).about("Digital asset operations"))
+            .subcommand(
+                Command::new(COMMAND_ASSET)
+                    .about("Digital asset operations")
+                    .subcommand_required(true)
+                    .subcommand(
+                        Command::new(COMMAND_SEARCH).about("Searches for assets in the project"),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_GET)
+                            .about("Retrieves an asset")
+                            .arg(
+                                Arg::new(PARAMETER_ID)
+                                    .long(PARAMETER_ID)
+                                    .required(true)
+                                    .help("asset ID"),
+                            )
+                            .arg(
+                                Arg::new(PARAMETER_ASSET_VERSION)
+                                    .long(PARAMETER_ASSET_VERSION)
+                                    .required(true)
+                                    .help("asset version"),
+                            ),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_CREATE)
+                            .about("Creates new asset in the project")
+                            .arg(
+                                Arg::new(PARAMETER_NAME)
+                                    .long(PARAMETER_NAME)
+                                    .required(true)
+                                    .help("asset name"),
+                            )
+                            .arg(
+                                Arg::new(PARAMETER_DESCRIPTION)
+                                    .long(PARAMETER_DESCRIPTION)
+                                    .required(false)
+                                    .help("asset description"),
+                            ),
+                    ),
+            )
             .get_matches()
     }
 
@@ -172,7 +206,6 @@ impl Cli {
                         let environment_id = sub_matches
                             .get_one::<String>(PARAMETER_ENVIRONMENT_ID)
                             .unwrap();
-                        let account = sub_matches.get_one::<String>(PARAMETER_ACCOUNT).unwrap();
                         let client_id = sub_matches.get_one::<String>(PARAMETER_CLIENT_ID).unwrap();
                         let client_secret = sub_matches
                             .get_one::<String>(PARAMETER_CLIENT_SECRET)
@@ -183,7 +216,6 @@ impl Cli {
 
                         configuration.set_project_id(project_id.to_owned());
                         configuration.set_environment_id(environment_id.to_owned());
-                        configuration.set_account(Some(account.to_owned()));
                         configuration.set_client_id(Some(client_id.to_owned()));
                         configuration.set_client_secret(Some(client_secret.to_owned()))?;
 
@@ -200,11 +232,38 @@ impl Cli {
                 }
                 _ => unreachable!("Invalid subcommand for 'config set"),
             },
-            Some((COMMAND_ASSET, _)) => {
-                let assets = api.search().await?;
-                let json = serde_json::to_string(&assets).unwrap();
-                println!("{}", json);
-            }
+            Some((COMMAND_ASSET, sub_matches)) => match sub_matches.subcommand() {
+                Some((COMMAND_SEARCH, _)) => {
+                    let assets = api.search_asset().await?;
+                    let json = serde_json::to_string(&assets).unwrap();
+                    println!("{}", json);
+                }
+                Some((COMMAND_CREATE, sub_matches)) => {
+                    let name = sub_matches.get_one::<String>(PARAMETER_NAME).unwrap();
+                    let description = sub_matches.get_one::<String>(PARAMETER_DESCRIPTION);
+
+                    let result = api
+                        .create_asset(
+                            name.to_owned(),
+                            description.to_owned().map(|s| s.to_owned()),
+                        )
+                        .await?;
+                    let json = serde_json::to_string(&result).unwrap();
+                    println!("{}", json);
+                }
+                Some((COMMAND_GET, sub_matches)) => {
+                    let id = sub_matches.get_one::<String>(PARAMETER_ID).unwrap();
+                    let version = sub_matches
+                        .get_one::<String>(PARAMETER_ASSET_VERSION)
+                        .unwrap();
+                    let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+
+                    let result = api.get_asset(&identity).await?;
+                    let json = serde_json::to_string(&result).unwrap();
+                    println!("{}", json);
+                }
+                _ => unreachable!("Invalid subsommand for 'asset'"),
+            },
 
             // Login operations
 
