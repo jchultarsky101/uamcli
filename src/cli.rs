@@ -19,6 +19,8 @@ pub const COMMAND_FOLDERS: &str = "folders";
 pub const COMMAND_LOGIN: &str = "login";
 pub const COMMAND_LOGOFF: &str = "logoff";
 pub const COMMAND_FOLDER: &str = "folder";
+pub const COMMAND_ASSET: &str = "asset";
+pub const COMMAND_SEARCH: &str = "search";
 
 pub const PARAMETER_OUTPUT: &str = "output";
 pub const PARAMETER_API_URL: &str = "api_url";
@@ -133,11 +135,7 @@ impl Cli {
                         Command::new(COMMAND_DELETE).about("deletes the configuration file"),
                     ),
             )
-            .subcommand(
-                // Login
-                Command::new(COMMAND_LOGIN).about("logins the user and creates a new session"),
-            )
-            .subcommand(Command::new(COMMAND_LOGOFF).about("terminates the current session"))
+            .subcommand(Command::new(COMMAND_ASSET).about("Digital asset operations"))
             .get_matches()
     }
 
@@ -202,11 +200,10 @@ impl Cli {
                 }
                 _ => unreachable!("Invalid subcommand for 'config set"),
             },
-            Some((COMMAND_LOGIN, _submatches)) => {
-                api.login().await?;
-            }
-            Some((COMMAND_LOGOFF, _submatches)) => {
-                api.logoff()?;
+            Some((COMMAND_ASSET, _)) => {
+                let assets = api.search().await?;
+                let json = serde_json::to_string(&assets).unwrap();
+                println!("{}", json);
             }
 
             // Login operations

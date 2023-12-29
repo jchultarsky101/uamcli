@@ -1,4 +1,4 @@
-use crate::{client::Client, configuration::Configuration};
+use crate::{client::Client, configuration::Configuration, model::Asset};
 use std::cell::RefCell;
 use thiserror::Error;
 
@@ -10,6 +10,8 @@ pub enum ApiError {
     InvalidClientSecret,
     #[error("client error")]
     HttpClientError(#[from] crate::client::ClientError),
+    #[error("HTTP client not initialized")]
+    ClientNotInitialized,
 }
 
 pub struct Api {
@@ -29,7 +31,7 @@ impl Api {
         self.configuration.clone()
     }
 
-    pub async fn login(&mut self) -> Result<(), ApiError> {
+    pub async fn init(&mut self) -> Result<(), ApiError> {
         let project_id = self.configuration.borrow().project_id();
         let environment_id = self.configuration.borrow().environment_id();
         //let account = self.configuration.borrow().account();
@@ -46,8 +48,9 @@ impl Api {
         }
         let client_secret = client_secret.unwrap();
 
-        let mut client = Client::new(project_id, environment_id, client_id, client_secret)?;
-        client.login().await?;
+        let client = Client::new(project_id, environment_id, client_id, client_secret)?;
+
+        self.client = Some(client);
 
         Ok(())
     }
@@ -56,5 +59,14 @@ impl Api {
         self.client = None;
 
         todo!("Implement logoff");
+    }
+
+    pub async fn search(&mut self) -> Result<Vec<Asset>, ApiError> {
+        self.init().await?;
+        log::trace!("Searching for assets...");
+        match &self.client {
+            Some(client) => Ok(client.search_asset().await?),
+            None => Err(ApiError::ClientNotInitialized),
+        }
     }
 }
