@@ -36,6 +36,28 @@ pub struct Dataset {
     name: String,
 }
 
+impl Dataset {
+    pub fn new(id: String, name: String) -> Self {
+        Self { id, name }
+    }
+
+    pub fn id(&self) -> String {
+        self.id.to_owned()
+    }
+
+    pub fn set_id(&mut self, id: String) {
+        self.id = id.to_owned();
+    }
+
+    pub fn name(&self) -> String {
+        self.name.to_owned()
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name.to_owned();
+    }
+}
+
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Asset {
     identity: AssetIdentity,
@@ -51,7 +73,7 @@ pub struct Asset {
     project_ids: Vec<String>,
     preview_file: Option<String>,
     preview_file_dataset_id: Option<String>,
-    datasets: Vec<Dataset>,
+    datasets: Option<Vec<Dataset>>,
 }
 
 impl Asset {
@@ -69,7 +91,7 @@ impl Asset {
         project_ids: Vec<String>,
         preview_file: Option<String>,
         preview_file_dataset_id: Option<String>,
-        datasets: Vec<Dataset>,
+        datasets: Option<Vec<Dataset>>,
     ) -> Self {
         Asset {
             identity,
@@ -193,11 +215,11 @@ impl Asset {
         self.preview_file_dataset_id = preview_file_dataset_id.to_owned();
     }
 
-    pub fn datasets(&self) -> Vec<Dataset> {
+    pub fn datasets(&self) -> Option<Vec<Dataset>> {
         self.datasets.clone()
     }
 
-    pub fn set_datasets(&mut self, datasets: Vec<Dataset>) {
+    pub fn set_datasets(&mut self, datasets: Option<Vec<Dataset>>) {
         self.datasets = datasets.clone();
     }
 }

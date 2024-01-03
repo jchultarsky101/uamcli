@@ -3,7 +3,10 @@ use crate::{
     configuration::Configuration,
     model::{Asset, AssetIdentity},
 };
-use std::cell::RefCell;
+use std::{
+    cell::RefCell,
+    path::{Path, PathBuf},
+};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -78,11 +81,12 @@ impl Api {
         &mut self,
         name: String,
         description: Option<String>,
+        data_file: &Path,
     ) -> Result<AssetIdentity, ApiError> {
         self.init().await?;
         log::trace!("Creating asset {}...", name.to_owned());
         match &self.client {
-            Some(client) => Ok(client.create_asset(name, description).await?),
+            Some(client) => Ok(client.create_asset(name, description, data_file).await?),
             None => Err(ApiError::ClientNotInitialized),
         }
     }
@@ -92,6 +96,21 @@ impl Api {
         log::trace!("Retrieving asset {}...", identity.id());
         match &self.client {
             Some(client) => Ok(client.get_asset(identity).await?),
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
+    pub async fn download_asset(
+        &mut self,
+        identity: &AssetIdentity,
+        output_directory: Option<&PathBuf>,
+    ) -> Result<(), ApiError> {
+        self.init().await?;
+        log::trace!("Downloading all files for asset {}...", identity.id());
+        match &self.client {
+            Some(client) => Ok(client
+                .download_all_asset_files(identity, output_directory)
+                .await?),
             None => Err(ApiError::ClientNotInitialized),
         }
     }

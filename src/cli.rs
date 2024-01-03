@@ -21,16 +21,19 @@ const COMMAND_CLIENT: &str = "client";
 //const COMMAND_LOGOFF: &str = "logoff";
 const COMMAND_ASSET: &str = "asset";
 const COMMAND_SEARCH: &str = "search";
+const COMMAND_DOWNLOAD: &str = "download";
 
 const PARAMETER_OUTPUT: &str = "output";
+const PARAMETER_DOWNLOAD_DIR: &str = "download-dir";
 const PARAMETER_CLIENT_ID: &str = "client_id";
 const PARAMETER_CLIENT_SECRET: &str = "client_secret";
 const PARAMETER_PROJECT_ID: &str = "project";
 const PARAMETER_ENVIRONMENT_ID: &str = "environment";
 const PARAMETER_NAME: &str = "name";
 const PARAMETER_DESCRIPTION: &str = "description";
-const PARAMETER_ID: &str = "id";
+const PARAMETER_ASSET_ID: &str = "asset-id";
 const PARAMETER_ASSET_VERSION: &str = "asset-version";
+const PARAMETER_DATA_FILE: &str = "data";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -62,28 +65,32 @@ impl Cli {
             .required(true)
             .help("output file path")
             .value_parser(clap::value_parser!(PathBuf));
-
         let project_id_parameter = Arg::new(PARAMETER_PROJECT_ID)
             .short('p')
             .long(PARAMETER_PROJECT_ID)
             .num_args(1)
             .required(true)
             .help("tenant ID");
-
         let client_id_parameter = Arg::new(PARAMETER_CLIENT_ID)
             .long(PARAMETER_CLIENT_ID)
             .required(true)
             .help("Client ID for authentication");
-
         let client_secret_parameter = Arg::new(PARAMETER_CLIENT_SECRET)
             .long(PARAMETER_CLIENT_SECRET)
             .required(true)
             .help("Client secret for authentication");
-
         let environment_id_parameter = Arg::new(PARAMETER_ENVIRONMENT_ID)
             .long(PARAMETER_ENVIRONMENT_ID)
             .required(true)
             .help("Unity environment ID");
+        let asset_id_parameter = Arg::new(PARAMETER_ASSET_ID)
+            .long(PARAMETER_ASSET_ID)
+            .required(true)
+            .help("asset ID");
+        let asset_version_parameter = Arg::new(PARAMETER_ASSET_VERSION)
+            .long(PARAMETER_ASSET_VERSION)
+            .required(true)
+            .help("asset version");
 
         Command::new(env!("CARGO_PKG_NAME"))
             .version(env!("CARGO_PKG_VERSION"))
@@ -140,18 +147,8 @@ impl Cli {
                     .subcommand(
                         Command::new(COMMAND_GET)
                             .about("Retrieves an asset")
-                            .arg(
-                                Arg::new(PARAMETER_ID)
-                                    .long(PARAMETER_ID)
-                                    .required(true)
-                                    .help("asset ID"),
-                            )
-                            .arg(
-                                Arg::new(PARAMETER_ASSET_VERSION)
-                                    .long(PARAMETER_ASSET_VERSION)
-                                    .required(true)
-                                    .help("asset version"),
-                            ),
+                            .arg(asset_id_parameter.clone())
+                            .arg(asset_version_parameter.clone()),
                     )
                     .subcommand(
                         Command::new(COMMAND_CREATE)
@@ -167,6 +164,26 @@ impl Cli {
                                     .long(PARAMETER_DESCRIPTION)
                                     .required(false)
                                     .help("asset description"),
+                            )
+                            .arg(
+                                Arg::new(PARAMETER_DATA_FILE)
+                                    .long(PARAMETER_DATA_FILE)
+                                    .required(true)
+                                    .help("file containing the 3D model data")
+                                    .value_parser(clap::value_parser!(PathBuf)),
+                            ),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_DOWNLOAD)
+                            .about("Download all asset files")
+                            .arg(asset_id_parameter.clone())
+                            .arg(asset_version_parameter.clone())
+                            .arg(
+                                Arg::new(PARAMETER_DOWNLOAD_DIR)
+                                    .long(PARAMETER_DOWNLOAD_DIR)
+                                    .required(false)
+                                    .help("download directory path")
+                                    .value_parser(clap::value_parser!(PathBuf)),
                             ),
                     ),
             )
@@ -241,18 +258,21 @@ impl Cli {
                 Some((COMMAND_CREATE, sub_matches)) => {
                     let name = sub_matches.get_one::<String>(PARAMETER_NAME).unwrap();
                     let description = sub_matches.get_one::<String>(PARAMETER_DESCRIPTION);
+                    let data_file_path =
+                        sub_matches.get_one::<PathBuf>(PARAMETER_DATA_FILE).unwrap();
 
                     let result = api
                         .create_asset(
                             name.to_owned(),
                             description.to_owned().map(|s| s.to_owned()),
+                            data_file_path.as_path(),
                         )
                         .await?;
                     let json = serde_json::to_string(&result).unwrap();
                     println!("{}", json);
                 }
                 Some((COMMAND_GET, sub_matches)) => {
-                    let id = sub_matches.get_one::<String>(PARAMETER_ID).unwrap();
+                    let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
                     let version = sub_matches
                         .get_one::<String>(PARAMETER_ASSET_VERSION)
                         .unwrap();
@@ -261,6 +281,16 @@ impl Cli {
                     let result = api.get_asset(&identity).await?;
                     let json = serde_json::to_string(&result).unwrap();
                     println!("{}", json);
+                }
+                Some((COMMAND_DOWNLOAD, sub_matches)) => {
+                    let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
+                    let version = sub_matches
+                        .get_one::<String>(PARAMETER_ASSET_VERSION)
+                        .unwrap();
+                    let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+                    let output_directory = sub_matches.get_one::<PathBuf>(PARAMETER_DOWNLOAD_DIR);
+
+                    let _ = api.download_asset(&identity, output_directory).await?;
                 }
                 _ => unreachable!("Invalid subsommand for 'asset'"),
             },
