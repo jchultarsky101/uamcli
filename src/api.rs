@@ -1,7 +1,7 @@
 use crate::{
     client::Client,
     configuration::Configuration,
-    model::{Asset, AssetIdentity},
+    model::{Asset, AssetIdentity, AssetStatus},
 };
 use std::{
     cell::RefCell,
@@ -96,6 +96,19 @@ impl Api {
         log::trace!("Retrieving asset {}...", identity.id());
         match &self.client {
             Some(client) => Ok(client.get_asset(identity).await?),
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
+    pub async fn set_asset_status(
+        &mut self,
+        identity: &AssetIdentity,
+        status: &AssetStatus,
+    ) -> Result<(), ApiError> {
+        self.init().await?;
+        log::trace!("Publishing asset {}...", identity.id());
+        match &self.client {
+            Some(client) => Ok(client.set_asset_status(identity, status).await?),
             None => Err(ApiError::ClientNotInitialized),
         }
     }

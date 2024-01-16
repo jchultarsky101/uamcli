@@ -1,4 +1,59 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub struct AssetStatusParseError(String);
+
+impl std::fmt::Display for AssetStatusParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Failed to parse status value of {}", self.0)
+    }
+}
+
+#[derive(Debug, PartialEq, PartialOrd, Clone, Serialize, Deserialize)]
+pub enum AssetStatus {
+    Draft,
+    InReview,
+    Approved,
+    Published,
+    Rejected,
+    Withdrawn,
+}
+
+impl std::fmt::Display for AssetStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                AssetStatus::Draft => "draft",
+                AssetStatus::InReview => "inreview",
+                AssetStatus::Approved => "approved",
+                AssetStatus::Published => "published",
+                AssetStatus::Rejected => "rejected",
+                AssetStatus::Withdrawn => "withdrawn",
+            }
+        )
+    }
+}
+
+impl FromStr for AssetStatus {
+    type Err = AssetStatusParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let value = s.to_lowercase();
+        match value.as_ref() {
+            "draft" => Ok(AssetStatus::Draft),
+            "inreview" => Ok(AssetStatus::InReview),
+            "approved" => Ok(AssetStatus::Approved),
+            "published" => Ok(AssetStatus::Published),
+            "rejected" => Ok(AssetStatus::Rejected),
+            "withdrawn" => Ok(AssetStatus::Withdrawn),
+            _ => Err(AssetStatusParseError(value.to_string())),
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, PartialOrd, Clone, Serialize, Deserialize)]
 pub struct AssetIdentity {

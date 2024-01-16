@@ -1,7 +1,7 @@
 use crate::{
     api::Api,
     configuration::{Configuration, ConfigurationError},
-    model::AssetIdentity,
+    model::{AssetIdentity, AssetStatus},
 };
 use clap::{Arg, ArgMatches, Command};
 use std::path::PathBuf;
@@ -22,6 +22,7 @@ const COMMAND_CLIENT: &str = "client";
 const COMMAND_ASSET: &str = "asset";
 const COMMAND_SEARCH: &str = "search";
 const COMMAND_DOWNLOAD: &str = "download";
+const COMMAND_STATUS: &str = "status";
 
 const PARAMETER_OUTPUT: &str = "output";
 const PARAMETER_DOWNLOAD_DIR: &str = "download-dir";
@@ -34,6 +35,7 @@ const PARAMETER_DESCRIPTION: &str = "description";
 const PARAMETER_ASSET_ID: &str = "asset-id";
 const PARAMETER_ASSET_VERSION: &str = "asset-version";
 const PARAMETER_DATA_FILE: &str = "data";
+const PARAMETER_STATUS: &str = "status";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -48,6 +50,8 @@ pub enum CliError {
     ConfigurationError(#[from] ConfigurationError),
     #[error("API error")]
     ApiError(#[from] crate::api::ApiError),
+    #[error("Asset staus parse error")]
+    StatusParseError(#[from] crate::model::AssetStatusParseError),
 }
 
 impl Default for Cli {
@@ -185,6 +189,21 @@ impl Cli {
                                     .help("download directory path")
                                     .value_parser(clap::value_parser!(PathBuf)),
                             ),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_STATUS)
+                            .about("Status operations on an asset")
+                            .subcommand(
+                                Command::new(COMMAND_SET)
+                                    .arg(asset_id_parameter.clone())
+                                    .arg(asset_version_parameter.clone())
+                                    .arg(
+                                        Arg::new(PARAMETER_STATUS)
+                                            .long(PARAMETER_STATUS)
+                                            .required(true)
+                                            .help("asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)")
+                                    ),
+                            ),
                     ),
             )
             .get_matches()
@@ -292,6 +311,20 @@ impl Cli {
 
                     let _ = api.download_asset(&identity, output_directory).await?;
                 }
+                Some((COMMAND_STATUS, sub_matches)) => match sub_matches.subcommand() {
+                    Some((COMMAND_SET, sub_matches)) => {
+                        let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
+                        let version = sub_matches
+                            .get_one::<String>(PARAMETER_ASSET_VERSION)
+                            .unwrap();
+                        let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+                        let status = sub_matches.get_one::<String>(PARAMETER_STATUS).unwrap();
+                        let status: AssetStatus = status.as_str().parse()?;
+
+                        let _ = api.set_asset_status(&identity, &status).await?;
+                    }
+                    _ => unreachable!("Invalid subcommand for 'asset status"),
+                },
                 _ => unreachable!("Invalid subsommand for 'asset'"),
             },
 

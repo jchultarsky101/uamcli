@@ -1,4 +1,4 @@
-use crate::model::{Asset, AssetIdentity, Dataset};
+use crate::model::{Asset, AssetIdentity, AssetStatus, Dataset};
 use base64::{engine::general_purpose, Engine};
 use dirs;
 use futures::StreamExt;
@@ -188,25 +188,6 @@ struct DatasetCreateRequest {
     description: Option<String>,
 }
 
-impl DatasetCreateRequest {
-    fn new(name: String) -> Self {
-        DatasetCreateRequest {
-            name,
-            description: None,
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct DatasetCreateResponse {
-    #[serde(rename = "datasetId")]
-    id: String,
-    #[serde(rename = "name")]
-    name: String,
-    #[serde(rename = "systemTags")]
-    system_tags: Vec<String>,
-}
-
 #[derive(Debug, Serialize)]
 struct FileCreateRequest {
     #[serde(rename = "filePath")]
@@ -235,8 +216,6 @@ struct FileCreateResponse {
 
 #[derive(Debug, Deserialize)]
 struct AssetDownloadUrlResponse {
-    #[serde(rename = "datasetId")]
-    dataset_id: String,
     #[serde(rename = "filePath")]
     file_path: String,
     #[serde(rename = "url")]
@@ -703,6 +682,50 @@ impl Client {
         }
     }
 
+    pub async fn set_asset_status(
+        &self,
+        identity: &AssetIdentity,
+        status: &AssetStatus,
+    ) -> Result<(), ClientError> {
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        token_values.insert("assetId".to_string(), identity.id());
+        token_values.insert("assetVersion".to_string(), identity.version());
+        token_values.insert("status".to_string(), status.to_string());
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/status/{status}",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        log::trace!("GET {}", url);
+
+        let response = self
+            .http
+            .patch(url)
+            .header("cache-control", "no-cache")
+            .header("content-length", "0")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+            log::trace!("Response: {}", content);
+
+            Ok(())
+        } else {
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
     /// Searches for an asset and returns a list of assets found
     pub async fn search_asset(&self) -> Result<Vec<Asset>, ClientError> {
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
@@ -743,55 +766,6 @@ impl Client {
             let assets: Vec<Asset> = response.assets.into_iter().map(|a| a.into()).collect();
 
             Ok(assets)
-        } else {
-            Err(ClientError::UnexpectedResponse(status))
-        }
-    }
-
-    async fn create_dataset(
-        &self,
-        name: String,
-        asset_id: String,
-        asset_version: String,
-    ) -> Result<String, ClientError> {
-        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
-        let mut token_values: HashMap<String, String> = HashMap::new();
-        token_values.insert("projectId".to_string(), self.project_id.to_owned());
-        token_values.insert("assetId".to_string(), asset_id.to_owned());
-        token_values.insert("asset_version".to_string(), asset_version.to_owned());
-        let path = strfmt(
-            "/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/datasets",
-            &token_values,
-        )
-        .unwrap();
-        url.push_str(path.as_str());
-
-        let dataset_request = DatasetCreateRequest::new(name.to_owned());
-
-        log::trace!("POST {}", url);
-
-        let response = self
-            .http
-            .post(url)
-            .header("cache-control", "no-cache")
-            .timeout(Duration::from_secs(30))
-            .basic_auth(
-                self.client_id.to_owned(),
-                Some(self.client_secret.to_owned()),
-            )
-            .json(&dataset_request)
-            .send()
-            .await?;
-
-        let status = response.status();
-        if status.is_success() {
-            let content = response.text().await?;
-
-            log::trace!("Response: {}", content);
-
-            let response: DatasetCreateResponse = serde_yaml::from_str(&content).unwrap();
-
-            Ok(response.id)
         } else {
             Err(ClientError::UnexpectedResponse(status))
         }
