@@ -250,7 +250,7 @@ struct AllAssetDownloadUrlsResponse {
 }
 
 const UNITY_TOKEN_EXCHANGE_URL: &'static str = "https://services.api.unity.com/auth/v1/token-exchange?projectId={PROJECT_ID}&environmentId={ENVIRONMENT_ID}";
-const UNITY_PRODUCTION_SERVICES_BASE_URL: &'static str = "https://services.api.unity.com";
+const UNITY_PRODUCTION_SERVICES_BASE_URL: &'static str = "https://services.unity.com/api"; //"https://services.api.unity.com";
 
 #[derive(Debug)]
 pub struct Client {
@@ -349,9 +349,9 @@ impl Client {
         &self,
         asset_identity: &AssetIdentity,
         dataset_id: &String,
-        file_path: &Path,
+        local_file_path: &Path,
     ) -> Result<FileCreateResponse, ClientError> {
-        log::trace!("Creating file...");
+        log::trace!("Reuesting remote file creation...");
 
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
         let mut token_values: HashMap<String, String> = HashMap::new();
@@ -362,9 +362,10 @@ impl Client {
         let path = strfmt("/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/datasets/{datasetId}/files", &token_values).unwrap();
         url.push_str(path.as_str());
 
-        let file = File::open(file_path)?;
+        let file = File::open(local_file_path)?;
         let file_size = file.metadata().unwrap().len();
-        let file_name = file_path.file_name().unwrap();
+        log::trace!("File size is {}", file_size);
+        let file_name = local_file_path.file_name().unwrap();
         let file_create_request =
             FileCreateRequest::new(String::from(file_name.to_string_lossy()), None, file_size);
 
@@ -399,24 +400,74 @@ impl Client {
         }
     }
 
+    pub async fn upload_file(
+        &self,
+        asset_identity: &AssetIdentity,
+        dataset_id: &String,
+        local_file_path: &Path,
+    ) -> Result<(), ClientError> {
+        let file_name = String::from(local_file_path.file_name().unwrap().to_string_lossy());
+        let remote_file_path = file_name.to_owned();
+        let remote_file_path: String =
+            url::form_urlencoded::byte_serialize(remote_file_path.as_bytes()).collect();
+        let path_str = String::from(local_file_path.to_string_lossy());
+        log::trace!("Uploading file {} to Unity Asset Manager", path_str);
+
+        let create_result = self
+            .create_file(asset_identity, dataset_id, local_file_path)
+            .await?;
+
+        let url = create_result.upload_url.to_owned();
+        log::trace!("PUT {}", url.to_string());
+
+        log::trace!(
+            "Uploading file {} to {} as {}...",
+            String::from(local_file_path.to_string_lossy()),
+            create_result.upload_url.to_owned(),
+            remote_file_path
+        );
+
+        let file = tokio::fs::File::open(local_file_path).await?;
+        let stream = FramedRead::new(file, BytesCodec::new());
+        let body = Body::wrap_stream(stream);
+
+        let response = self
+            .http
+            .put(url)
+            .header("x-ms-blob-type", "BlockBlob")
+            .header("Content-Length", "0")
+            .body(body)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+            log::trace!("Response: {}", content);
+            self.finalize_file_upload(asset_identity, &file_name)
+                .await?;
+
+            Ok(())
+        } else {
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
     async fn finalize_file_upload(
         &self,
         asset_identity: &AssetIdentity,
-        file_path: &Path,
+        file_name: &String,
     ) -> Result<(), ClientError> {
-        let file_name = String::from(file_path.file_name().unwrap().to_string_lossy());
-        let encoded_file_name: String =
-            url::form_urlencoded::byte_serialize(file_name.as_bytes()).collect();
-        let path_str = String::from(file_path.to_string_lossy());
-        log::trace!("Finalizing file upload for file {}...", &path_str);
+        log::trace!("Finalizing file upload for remote file {}...", &file_name);
 
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
         let mut token_values: HashMap<String, String> = HashMap::new();
         token_values.insert("projectId".to_string(), self.project_id.to_owned());
         token_values.insert("assetId".to_string(), asset_identity.id());
         token_values.insert("assetVersion".to_string(), asset_identity.version());
-        token_values.insert("filename".to_string(), encoded_file_name);
-        let url_path = strfmt("/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/files/{filename}/finalize", &token_values).unwrap();
+        token_values.insert("fileName".to_string(), file_name.to_owned());
+        let url_path = strfmt("/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/files/{fileName}/finalize", &token_values).unwrap();
+
         url.push_str(url_path.as_str());
 
         log::trace!("POST {}", url);
@@ -425,6 +476,7 @@ impl Client {
             .post(url)
             .header("cache-control", "no-cache")
             .header("content-length", "0")
+            .header("accept", "application/json")
             .timeout(Duration::from_secs(120))
             .basic_auth(
                 self.client_id.to_owned(),
@@ -442,35 +494,6 @@ impl Client {
         } else {
             Err(ClientError::UnexpectedResponse(status))
         }
-    }
-
-    pub async fn upload_file(
-        &self,
-        asset_identity: &AssetIdentity,
-        dataset_id: &String,
-        path: &Path,
-    ) -> Result<(), ClientError> {
-        let create_result = self.create_file(asset_identity, dataset_id, path).await?;
-
-        log::trace!(
-            "Uploading file {} to {}...",
-            String::from(path.to_string_lossy()),
-            create_result.upload_url
-        );
-        let file = tokio::fs::File::open(path).await?;
-        let stream = FramedRead::new(file, BytesCodec::new());
-        let body = Body::wrap_stream(stream);
-
-        let client = reqwest::Client::new();
-        let _ = client
-            .post("http://httpbin.org/post")
-            .body(body)
-            .send()
-            .await?;
-
-        self.finalize_file_upload(asset_identity, path).await?;
-
-        Ok(())
     }
 
     async fn get_asset_download_urls(
