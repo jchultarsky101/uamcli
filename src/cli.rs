@@ -1,6 +1,7 @@
 use crate::{
     api::Api,
     configuration::{Configuration, ConfigurationError},
+    model::{AssetIdentity, AssetStatus},
 };
 use clap::{Arg, ArgMatches, Command};
 use std::path::PathBuf;
@@ -8,26 +9,36 @@ use thiserror::Error;
 
 pub struct Cli {}
 
-pub const COMMAND_CONFIG: &str = "config";
-pub const COMMAND_EXPORT: &str = "export";
-pub const COMMAND_GET: &str = "get";
-pub const COMMAND_PATH: &str = "path";
-pub const COMMAND_SET: &str = "set";
-pub const COMMAND_DELETE: &str = "delete";
-pub const COMMAND_CLIENT: &str = "client";
-pub const COMMAND_FOLDERS: &str = "folders";
-pub const COMMAND_LOGIN: &str = "login";
-pub const COMMAND_LOGOFF: &str = "logoff";
-pub const COMMAND_FOLDER: &str = "folder";
+const COMMAND_CONFIG: &str = "config";
+const COMMAND_EXPORT: &str = "export";
+const COMMAND_GET: &str = "get";
+const COMMAND_PATH: &str = "path";
+const COMMAND_SET: &str = "set";
+const COMMAND_CREATE: &str = "create";
+const COMMAND_DELETE: &str = "delete";
+const COMMAND_CLIENT: &str = "client";
+//const COMMAND_LOGIN: &str = "login";
+//const COMMAND_LOGOFF: &str = "logoff";
+const COMMAND_ASSET: &str = "asset";
+const COMMAND_SEARCH: &str = "search";
+const COMMAND_DOWNLOAD: &str = "download";
+const COMMAND_UPLOAD: &str = "upload";
+const COMMAND_STATUS: &str = "status";
+const COMMAND_METADATA: &str = "metadata";
 
-pub const PARAMETER_OUTPUT: &str = "output";
-pub const PARAMETER_API_URL: &str = "api_url";
-pub const PARAMETER_ACCOUNT: &str = "account";
-pub const PARAMETER_OIDC_URL: &str = "oidc_url";
-pub const PARAMETER_CLIENT_ID: &str = "client_id";
-pub const PARAMETER_CLIENT_SECRET: &str = "client_secret";
-pub const PARAMETER_PROJECT_ID: &str = "project";
-pub const PARAMETER_ENVIRONMENT_ID: &str = "environment";
+const PARAMETER_OUTPUT: &str = "output";
+const PARAMETER_DOWNLOAD_DIR: &str = "download-dir";
+const PARAMETER_CLIENT_ID: &str = "client_id";
+const PARAMETER_CLIENT_SECRET: &str = "client_secret";
+const PARAMETER_ORGANIZATION: &str = "organization";
+const PARAMETER_PROJECT_ID: &str = "project";
+const PARAMETER_ENVIRONMENT_ID: &str = "environment";
+const PARAMETER_NAME: &str = "name";
+const PARAMETER_DESCRIPTION: &str = "description";
+const PARAMETER_ASSET_ID: &str = "asset-id";
+const PARAMETER_ASSET_VERSION: &str = "asset-version";
+const PARAMETER_DATA_FILE: &str = "data";
+const PARAMETER_STATUS: &str = "status";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -42,6 +53,8 @@ pub enum CliError {
     ConfigurationError(#[from] ConfigurationError),
     #[error("API error")]
     ApiError(#[from] crate::api::ApiError),
+    #[error("Asset staus parse error")]
+    StatusParseError(#[from] crate::model::AssetStatusParseError),
 }
 
 impl Default for Cli {
@@ -59,33 +72,38 @@ impl Cli {
             .required(true)
             .help("output file path")
             .value_parser(clap::value_parser!(PathBuf));
-
+        let organization_id_parameter = Arg::new(PARAMETER_ORGANIZATION)
+            .short('o')
+            .long(PARAMETER_ORGANIZATION)
+            .num_args(1)
+            .required(true)
+            .help("organization ID");
         let project_id_parameter = Arg::new(PARAMETER_PROJECT_ID)
             .short('p')
             .long(PARAMETER_PROJECT_ID)
             .num_args(1)
             .required(true)
             .help("tenant ID");
-
         let client_id_parameter = Arg::new(PARAMETER_CLIENT_ID)
             .long(PARAMETER_CLIENT_ID)
             .required(true)
             .help("Client ID for authentication");
-
         let client_secret_parameter = Arg::new(PARAMETER_CLIENT_SECRET)
             .long(PARAMETER_CLIENT_SECRET)
             .required(true)
             .help("Client secret for authentication");
-
-        let account_parameter = Arg::new(PARAMETER_ACCOUNT)
-            .long(PARAMETER_ACCOUNT)
-            .required(true)
-            .help("Service account name");
-
         let environment_id_parameter = Arg::new(PARAMETER_ENVIRONMENT_ID)
             .long(PARAMETER_ENVIRONMENT_ID)
             .required(true)
             .help("Unity environment ID");
+        let asset_id_parameter = Arg::new(PARAMETER_ASSET_ID)
+            .long(PARAMETER_ASSET_ID)
+            .required(true)
+            .help("asset ID");
+        let asset_version_parameter = Arg::new(PARAMETER_ASSET_VERSION)
+            .long(PARAMETER_ASSET_VERSION)
+            .required(true)
+            .help("asset version");
 
         Command::new(env!("CARGO_PKG_NAME"))
             .version(env!("CARGO_PKG_VERSION"))
@@ -117,9 +135,9 @@ impl Cli {
                             .subcommand(
                                 Command::new(COMMAND_CLIENT)
                                     .about("Sets the clinet properties")
+                                    .arg(organization_id_parameter)
                                     .arg(project_id_parameter)
                                     .arg(environment_id_parameter)
-                                    .arg(account_parameter)
                                     .arg(client_id_parameter)
                                     .arg(client_secret_parameter),
                             ),
@@ -134,10 +152,88 @@ impl Cli {
                     ),
             )
             .subcommand(
-                // Login
-                Command::new(COMMAND_LOGIN).about("logins the user and creates a new session"),
+                Command::new(COMMAND_ASSET)
+                    .about("Digital asset operations")
+                    .subcommand_required(true)
+                    .subcommand(
+                        Command::new(COMMAND_SEARCH).about("Searches for assets in the project"),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_GET)
+                            .about("Retrieves an asset")
+                            .arg(asset_id_parameter.clone())
+                            .arg(asset_version_parameter.clone()),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_CREATE)
+                            .about("Creates new asset in the project")
+                            .arg(
+                                Arg::new(PARAMETER_NAME)
+                                    .long(PARAMETER_NAME)
+                                    .required(true)
+                                    .help("asset name"),
+                            )
+                            .arg(
+                                Arg::new(PARAMETER_DESCRIPTION)
+                                    .long(PARAMETER_DESCRIPTION)
+                                    .required(false)
+                                    .help("asset description"),
+                            )
+                            .arg(
+                                Arg::new(PARAMETER_DATA_FILE)
+                                    .long(PARAMETER_DATA_FILE)
+                                    .required(true)
+                                    .action(clap::ArgAction::Append)
+                                    .help("file containing the 3D model data")
+                                    .value_parser(clap::value_parser!(PathBuf)),
+                            ),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_DOWNLOAD)
+                            .about("Download all asset files")
+                            .arg(asset_id_parameter.clone())
+                            .arg(asset_version_parameter.clone())
+                            .arg(
+                                Arg::new(PARAMETER_DOWNLOAD_DIR)
+                                    .long(PARAMETER_DOWNLOAD_DIR)
+                                    .required(false)
+                                    .help("download directory path")
+                                    .value_parser(clap::value_parser!(PathBuf)),
+                            ),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_STATUS)
+                            .about("Status operations on an asset")
+                            .subcommand(
+                                Command::new(COMMAND_SET)
+                                    .arg(asset_id_parameter.clone())
+                                    .arg(asset_version_parameter.clone())
+                                    .arg(
+                                        Arg::new(PARAMETER_STATUS)
+                                            .long(PARAMETER_STATUS)
+                                            .required(true)
+                                            .help("asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)")
+                                    ),
+                            ),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_METADATA)
+                            .about("Metadata operations")
+                            .subcommand(
+                                Command::new(COMMAND_UPLOAD)
+                                    .arg(asset_id_parameter.clone())
+                                    .arg(asset_version_parameter.clone())
+                                    .arg(
+                                        Arg::new(PARAMETER_DATA_FILE)
+                                            .long(PARAMETER_DATA_FILE)
+                                            .required(true)
+                                            .action(clap::ArgAction::Append)
+                                            .help("file containing the metadata in CSV format with two columns: NAME, VALUE")
+                                            .value_parser(clap::value_parser!(PathBuf)),
+                                    ),
+                            )
+                    )
             )
-            .subcommand(Command::new(COMMAND_LOGOFF).about("terminates the current session"))
             .get_matches()
     }
 
@@ -169,12 +265,14 @@ impl Cli {
                 },
                 Some((COMMAND_SET, sub_matches)) => match sub_matches.subcommand() {
                     Some((COMMAND_CLIENT, sub_matches)) => {
+                        let organization_id = sub_matches
+                            .get_one::<String>(PARAMETER_ORGANIZATION)
+                            .unwrap();
                         let project_id =
                             sub_matches.get_one::<String>(PARAMETER_PROJECT_ID).unwrap(); // unwraps here are safe, because the arguments is mandatory and it will caught by Clap before this point
                         let environment_id = sub_matches
                             .get_one::<String>(PARAMETER_ENVIRONMENT_ID)
                             .unwrap();
-                        let account = sub_matches.get_one::<String>(PARAMETER_ACCOUNT).unwrap();
                         let client_id = sub_matches.get_one::<String>(PARAMETER_CLIENT_ID).unwrap();
                         let client_secret = sub_matches
                             .get_one::<String>(PARAMETER_CLIENT_SECRET)
@@ -183,9 +281,9 @@ impl Cli {
                         let configuration = api.configuration();
                         let mut configuration = configuration.borrow_mut();
 
+                        configuration.set_organization_id(organization_id.to_owned());
                         configuration.set_project_id(project_id.to_owned());
                         configuration.set_environment_id(environment_id.to_owned());
-                        configuration.set_account(Some(account.to_owned()));
                         configuration.set_client_id(Some(client_id.to_owned()));
                         configuration.set_client_secret(Some(client_secret.to_owned()))?;
 
@@ -202,12 +300,83 @@ impl Cli {
                 }
                 _ => unreachable!("Invalid subcommand for 'config set"),
             },
-            Some((COMMAND_LOGIN, _submatches)) => {
-                api.login().await?;
-            }
-            Some((COMMAND_LOGOFF, _submatches)) => {
-                api.logoff()?;
-            }
+            Some((COMMAND_ASSET, sub_matches)) => match sub_matches.subcommand() {
+                Some((COMMAND_SEARCH, _)) => {
+                    let assets = api.search_asset().await?;
+                    let json = serde_json::to_string(&assets).unwrap();
+                    println!("{}", json);
+                }
+                Some((COMMAND_CREATE, sub_matches)) => {
+                    let name = sub_matches.get_one::<String>(PARAMETER_NAME).unwrap();
+                    let description = sub_matches.get_one::<String>(PARAMETER_DESCRIPTION);
+                    let data_file_paths = sub_matches
+                        .get_many::<PathBuf>(PARAMETER_DATA_FILE)
+                        .unwrap();
+                    let data_file_paths: Vec<&PathBuf> =
+                        data_file_paths.into_iter().map(|p| p.into()).collect();
+
+                    let result = api
+                        .create_asset(
+                            name.to_owned(),
+                            description.to_owned().map(|s| s.to_owned()),
+                            data_file_paths,
+                        )
+                        .await?;
+                    let json = serde_json::to_string(&result).unwrap();
+                    println!("{}", json);
+                }
+                Some((COMMAND_GET, sub_matches)) => {
+                    let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
+                    let version = sub_matches
+                        .get_one::<String>(PARAMETER_ASSET_VERSION)
+                        .unwrap();
+                    let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+
+                    let result = api.get_asset(&identity).await?;
+                    let json = serde_json::to_string(&result).unwrap();
+                    println!("{}", json);
+                }
+                Some((COMMAND_DOWNLOAD, sub_matches)) => {
+                    let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
+                    let version = sub_matches
+                        .get_one::<String>(PARAMETER_ASSET_VERSION)
+                        .unwrap();
+                    let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+                    let output_directory = sub_matches.get_one::<PathBuf>(PARAMETER_DOWNLOAD_DIR);
+
+                    let _ = api.download_asset(&identity, output_directory).await?;
+                }
+                Some((COMMAND_STATUS, sub_matches)) => match sub_matches.subcommand() {
+                    Some((COMMAND_SET, sub_matches)) => {
+                        let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
+                        let version = sub_matches
+                            .get_one::<String>(PARAMETER_ASSET_VERSION)
+                            .unwrap();
+                        let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+                        let status = sub_matches.get_one::<String>(PARAMETER_STATUS).unwrap();
+                        let status: AssetStatus = status.as_str().parse()?;
+
+                        let _ = api.set_asset_status(&identity, &status).await?;
+                    }
+                    _ => unreachable!("Invalid subcommand for 'asset status"),
+                },
+                Some((COMMAND_METADATA, sub_matches)) => match sub_matches.subcommand() {
+                    Some((COMMAND_UPLOAD, sub_matches)) => {
+                        let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
+                        let version = sub_matches
+                            .get_one::<String>(PARAMETER_ASSET_VERSION)
+                            .unwrap();
+                        let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+
+                        let data_file_path =
+                            sub_matches.get_one::<PathBuf>(PARAMETER_DATA_FILE).unwrap();
+
+                        let _ = api.upload_asset_metadata(&identity, data_file_path).await?;
+                    }
+                    _ => unreachable!("Invalid subsommand for 'asset metadata'"),
+                },
+                _ => unreachable!("Invalid subsommand for 'asset'"),
+            },
 
             // Login operations
 
