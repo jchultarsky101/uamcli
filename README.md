@@ -235,7 +235,7 @@ uamcli asset create --name test1 --data data/sample/test.stl --data data/sample/
 {"id":"65a7d8646e7591cfd372ee51","version":"1"}
 ````
 
-The output of the commands is usuqlly JSON. The UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
+The output of the commands is usually JSON. The UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
 used as the input to another program.
 
 
@@ -295,7 +295,7 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | jq
 
 To list all available assets in our Unity project, we can use the ***asset search*** command:
 
-````bash
+````nushell
 uamcli asset search
 ````
 ````
