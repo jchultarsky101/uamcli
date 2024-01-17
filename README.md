@@ -203,9 +203,9 @@ Options:
 
 ### Uploading data
 
-The Unity Asset Manager has the concept of an ***asset***. An asset is a container that may include one or more files under a common name.
-Those files could be anything, but most likelly those would be 3D models. For example, an STL file. To upload data, we use the ***asset*** command 
-with it's ***create*** subcommand.
+The Unity Asset Manager has the concept of an *asset*. An asset is a container that may include one or more files under a common name.
+Those files could be anything, but most likelly those would be 3D models. For example, an STL file. To upload data, we use the *asset* command 
+with it's *create* subcommand.
 
 ````nushell
 uamcli asset create --name test1 --data data/sample/test.stl
@@ -231,7 +231,7 @@ used as the input to another program.
 
 ### Reading asset data
 
-In the example above, the ***id*** is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
+In the example above, the *id* is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
 
 ````bash
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1
@@ -309,7 +309,7 @@ to make a 3D object.
 While the Unity Asset Manager allows for metadata properties to be declared of different types, the current version UAMCLI only supports text fields. This was done to satisfy a specific requirement of a downstream process. Future versions
 may add support for other types (e.g. boolean, etc.).
 
-To upload metadata to an existing asset, you can use the ***asset metadata upload*** command.
+To upload metadata to an existing asset, you can use the *asset metadata upload* command.
 
 ````nushell
 uamcli help asset metadata upload
