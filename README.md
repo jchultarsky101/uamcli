@@ -129,6 +129,8 @@ For example, to run it in a BASH shell:
 
 ````nushell
 uamcli
+````
+````
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
 ║ ║╠═╣║║║  ║  ║  ║
 ╚═╝╩ ╩╩ ╩  ╚═╝╩═╝╩
