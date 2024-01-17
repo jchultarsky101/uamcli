@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -113,7 +113,7 @@ impl Dataset {
     }
 }
 
-#[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Asset {
     identity: AssetIdentity,
     name: String,
@@ -129,6 +129,7 @@ pub struct Asset {
     preview_file: Option<String>,
     preview_file_dataset_id: Option<String>,
     datasets: Option<Vec<Dataset>>,
+    metadata: Option<Option<::std::collections::HashMap<String, String>>>,
 }
 
 impl Asset {
@@ -147,6 +148,7 @@ impl Asset {
         preview_file: Option<String>,
         preview_file_dataset_id: Option<String>,
         datasets: Option<Vec<Dataset>>,
+        metadata: Option<Option<::std::collections::HashMap<String, String>>>,
     ) -> Self {
         Asset {
             identity,
@@ -163,6 +165,7 @@ impl Asset {
             preview_file,
             preview_file_dataset_id,
             datasets,
+            metadata,
         }
     }
 
@@ -277,4 +280,28 @@ impl Asset {
     pub fn set_datasets(&mut self, datasets: Option<Vec<Dataset>>) {
         self.datasets = datasets.clone();
     }
+
+    pub fn metadata(&self) -> Option<Option<HashMap<String, String>>> {
+        self.metadata.clone()
+    }
+
+    pub fn set_metadata(&mut self, metadata: Option<Option<HashMap<String, String>>>) {
+        self.metadata = metadata.clone();
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MetadataEntry {
+    #[serde(rename = "Name")]
+    pub name: String,
+    #[serde(rename = "Value")]
+    pub value: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MetadataDefinition {
+    #[serde(rename = "name")]
+    pub name: String,
+    #[serde(rename = "type")]
+    pub value_type: String,
 }

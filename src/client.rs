@@ -1,4 +1,4 @@
-use crate::model::{Asset, AssetIdentity, AssetStatus, Dataset};
+use crate::model::{Asset, AssetIdentity, AssetStatus, Dataset, MetadataDefinition};
 use base64::{engine::general_purpose, Engine};
 use dirs;
 use futures::StreamExt;
@@ -116,6 +116,13 @@ struct AssetResponse {
     #[serde(rename = "previewFileDatasetId")]
     preview_file_dataset_id: Option<String>,
     datasets: Option<Vec<Dataset>>,
+    #[serde(
+        rename = "metadata",
+        default,
+        with = "serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    metadata: Option<Option<::std::collections::HashMap<String, String>>>,
 }
 
 impl Into<Asset> for AssetResponse {
@@ -135,6 +142,7 @@ impl Into<Asset> for AssetResponse {
             self.preview_file,
             self.preview_file_dataset_id,
             self.datasets,
+            self.metadata,
         )
     }
 }
@@ -155,6 +163,13 @@ struct AssetCreateRequest {
     description: Option<String>,
     #[serde(rename = "primaryType")]
     primary_type: String,
+    #[serde(
+        rename = "metadata",
+        default,
+        with = "serde_with::rust::double_option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    metadata: Option<Option<::std::collections::HashMap<String, String>>>,
 }
 
 impl AssetCreateRequest {
@@ -163,6 +178,18 @@ impl AssetCreateRequest {
             name,
             description,
             primary_type: "3D Model".to_string(),
+            metadata: None,
+        }
+    }
+}
+
+impl From<Asset> for AssetCreateRequest {
+    fn from(asset: Asset) -> AssetCreateRequest {
+        AssetCreateRequest {
+            name: asset.name(),
+            description: asset.description(),
+            primary_type: asset.primary_type(),
+            metadata: asset.metadata(),
         }
     }
 }
@@ -230,10 +257,13 @@ struct AllAssetDownloadUrlsResponse {
 
 const UNITY_TOKEN_EXCHANGE_URL: &'static str = "https://services.api.unity.com/auth/v1/token-exchange?projectId={PROJECT_ID}&environmentId={ENVIRONMENT_ID}";
 const UNITY_PRODUCTION_SERVICES_BASE_URL: &'static str = "https://services.unity.com/api"; //"https://services.api.unity.com";
+const UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL: &'static str =
+    "https://services.api.unity.com";
 
 #[derive(Debug)]
 pub struct Client {
     http: HttpClient,
+    organization_id: String,
     project_id: String,
     environment_id: String,
     client_id: String,
@@ -242,6 +272,7 @@ pub struct Client {
 
 impl Client {
     pub fn new(
+        organization_id: String,
         project_id: String,
         environment_id: String,
         client_id: String,
@@ -258,6 +289,7 @@ impl Client {
 
         let client = Self {
             http,
+            organization_id,
             project_id,
             environment_id,
             client_id,
@@ -584,7 +616,7 @@ impl Client {
         &self,
         name: String,
         description: Option<String>,
-        data_file: &Path,
+        data_files: Vec<&PathBuf>,
     ) -> Result<AssetIdentity, ClientError> {
         log::trace!("Creating an asset...");
 
@@ -625,8 +657,11 @@ impl Client {
             match source_dataset {
                 Some(source_dataset) => {
                     let source_dataset_id = source_dataset.id();
-                    self.upload_file(&identity, &source_dataset_id, data_file)
-                        .await?;
+
+                    for path in data_files {
+                        self.upload_file(&identity, &source_dataset_id, path.as_path())
+                            .await?;
+                    }
                 }
                 None => return Err(ClientError::NoSourceDataset),
             }
@@ -677,6 +712,48 @@ impl Client {
             let asset = response.into();
 
             Ok(Some(asset))
+        } else {
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
+    pub async fn update_asset(&self, asset: &Asset) -> Result<(), ClientError> {
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
+        let identity = asset.identity();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        token_values.insert("assetId".to_string(), identity.id());
+        token_values.insert("assetVersion".to_string(), identity.version());
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        log::trace!("PATCH {}", url);
+
+        let request: AssetCreateRequest = asset.to_owned().into();
+
+        let response = self
+            .http
+            .patch(url)
+            .header("cache-control", "no-cache")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .json(&request)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+
+            log::trace!("Response: {}", content);
+            Ok(())
         } else {
             Err(ClientError::UnexpectedResponse(status))
         }
@@ -769,5 +846,61 @@ impl Client {
         } else {
             Err(ClientError::UnexpectedResponse(status))
         }
+    }
+
+    pub async fn get_metadata_definition(
+        &self,
+        name: &String,
+    ) -> Result<Option<MetadataDefinition>, ClientError> {
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert(
+            "organizationId".to_string(),
+            self.organization_id.to_owned(),
+        );
+        token_values.insert("name".to_string(), name.to_owned());
+
+        let path = strfmt(
+            "/assets/v1/organizations/2475245830233/templates/fields/License",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        log::trace!("GET {}", url);
+
+        let response = self
+            .http
+            .get(url)
+            .header("cache-control", "no-cache")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+
+            log::trace!("Response: {}", content);
+
+            let definition: MetadataDefinition = serde_yaml::from_str(&content).unwrap();
+
+            Ok(Some(definition))
+        } else {
+            match status {
+                StatusCode::NOT_FOUND => Ok(None),
+                _ => Err(ClientError::UnexpectedResponse(status)),
+            }
+        }
+    }
+
+    pub async fn register_metadata_definition(&self, _name: &String) -> Result<(), ClientError> {
+        // for some reason, the API always returns Unauthorized when calling this endpoint
+        // I tried with Postman to the same effect
+        Ok(())
     }
 }

@@ -22,12 +22,15 @@ const COMMAND_CLIENT: &str = "client";
 const COMMAND_ASSET: &str = "asset";
 const COMMAND_SEARCH: &str = "search";
 const COMMAND_DOWNLOAD: &str = "download";
+const COMMAND_UPLOAD: &str = "upload";
 const COMMAND_STATUS: &str = "status";
+const COMMAND_METADATA: &str = "metadata";
 
 const PARAMETER_OUTPUT: &str = "output";
 const PARAMETER_DOWNLOAD_DIR: &str = "download-dir";
 const PARAMETER_CLIENT_ID: &str = "client_id";
 const PARAMETER_CLIENT_SECRET: &str = "client_secret";
+const PARAMETER_ORGANIZATION: &str = "organization";
 const PARAMETER_PROJECT_ID: &str = "project";
 const PARAMETER_ENVIRONMENT_ID: &str = "environment";
 const PARAMETER_NAME: &str = "name";
@@ -69,6 +72,12 @@ impl Cli {
             .required(true)
             .help("output file path")
             .value_parser(clap::value_parser!(PathBuf));
+        let organization_id_parameter = Arg::new(PARAMETER_ORGANIZATION)
+            .short('o')
+            .long(PARAMETER_ORGANIZATION)
+            .num_args(1)
+            .required(true)
+            .help("organization ID");
         let project_id_parameter = Arg::new(PARAMETER_PROJECT_ID)
             .short('p')
             .long(PARAMETER_PROJECT_ID)
@@ -126,6 +135,7 @@ impl Cli {
                             .subcommand(
                                 Command::new(COMMAND_CLIENT)
                                     .about("Sets the clinet properties")
+                                    .arg(organization_id_parameter)
                                     .arg(project_id_parameter)
                                     .arg(environment_id_parameter)
                                     .arg(client_id_parameter)
@@ -173,6 +183,7 @@ impl Cli {
                                 Arg::new(PARAMETER_DATA_FILE)
                                     .long(PARAMETER_DATA_FILE)
                                     .required(true)
+                                    .action(clap::ArgAction::Append)
                                     .help("file containing the 3D model data")
                                     .value_parser(clap::value_parser!(PathBuf)),
                             ),
@@ -204,7 +215,24 @@ impl Cli {
                                             .help("asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)")
                                     ),
                             ),
-                    ),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_METADATA)
+                            .about("Metadata operations")
+                            .subcommand(
+                                Command::new(COMMAND_UPLOAD)
+                                    .arg(asset_id_parameter.clone())
+                                    .arg(asset_version_parameter.clone())
+                                    .arg(
+                                        Arg::new(PARAMETER_DATA_FILE)
+                                            .long(PARAMETER_DATA_FILE)
+                                            .required(true)
+                                            .action(clap::ArgAction::Append)
+                                            .help("file containing the metadata in CSV format with two columns: NAME, VALUE")
+                                            .value_parser(clap::value_parser!(PathBuf)),
+                                    ),
+                            )
+                    )
             )
             .get_matches()
     }
@@ -237,6 +265,9 @@ impl Cli {
                 },
                 Some((COMMAND_SET, sub_matches)) => match sub_matches.subcommand() {
                     Some((COMMAND_CLIENT, sub_matches)) => {
+                        let organization_id = sub_matches
+                            .get_one::<String>(PARAMETER_ORGANIZATION)
+                            .unwrap();
                         let project_id =
                             sub_matches.get_one::<String>(PARAMETER_PROJECT_ID).unwrap(); // unwraps here are safe, because the arguments is mandatory and it will caught by Clap before this point
                         let environment_id = sub_matches
@@ -250,6 +281,7 @@ impl Cli {
                         let configuration = api.configuration();
                         let mut configuration = configuration.borrow_mut();
 
+                        configuration.set_organization_id(organization_id.to_owned());
                         configuration.set_project_id(project_id.to_owned());
                         configuration.set_environment_id(environment_id.to_owned());
                         configuration.set_client_id(Some(client_id.to_owned()));
@@ -277,14 +309,17 @@ impl Cli {
                 Some((COMMAND_CREATE, sub_matches)) => {
                     let name = sub_matches.get_one::<String>(PARAMETER_NAME).unwrap();
                     let description = sub_matches.get_one::<String>(PARAMETER_DESCRIPTION);
-                    let data_file_path =
-                        sub_matches.get_one::<PathBuf>(PARAMETER_DATA_FILE).unwrap();
+                    let data_file_paths = sub_matches
+                        .get_many::<PathBuf>(PARAMETER_DATA_FILE)
+                        .unwrap();
+                    let data_file_paths: Vec<&PathBuf> =
+                        data_file_paths.into_iter().map(|p| p.into()).collect();
 
                     let result = api
                         .create_asset(
                             name.to_owned(),
                             description.to_owned().map(|s| s.to_owned()),
-                            data_file_path.as_path(),
+                            data_file_paths,
                         )
                         .await?;
                     let json = serde_json::to_string(&result).unwrap();
@@ -324,6 +359,21 @@ impl Cli {
                         let _ = api.set_asset_status(&identity, &status).await?;
                     }
                     _ => unreachable!("Invalid subcommand for 'asset status"),
+                },
+                Some((COMMAND_METADATA, sub_matches)) => match sub_matches.subcommand() {
+                    Some((COMMAND_UPLOAD, sub_matches)) => {
+                        let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
+                        let version = sub_matches
+                            .get_one::<String>(PARAMETER_ASSET_VERSION)
+                            .unwrap();
+                        let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+
+                        let data_file_path =
+                            sub_matches.get_one::<PathBuf>(PARAMETER_DATA_FILE).unwrap();
+
+                        let _ = api.upload_asset_metadata(&identity, data_file_path).await?;
+                    }
+                    _ => unreachable!("Invalid subsommand for 'asset metadata'"),
                 },
                 _ => unreachable!("Invalid subsommand for 'asset'"),
             },

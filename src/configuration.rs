@@ -10,6 +10,7 @@ use std::{
 };
 
 pub const DEFAULT_APPLICATION_ID: &'static str = "uamcli";
+pub const DEFAULT_ORGANIZATION_ID: &'static str = "";
 pub const DEFAULT_PROJECT_ID: &'static str = "";
 pub const DEFAULT_ENVIRONMENT_ID: &'static str = "";
 pub const DEFAULT_CONFIGURATION_FILE_NAME: &'static str = "config.yml";
@@ -35,6 +36,7 @@ pub enum ConfigurationError {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Configuration {
+    organization_id: String,
     project_id: String,
     environment_id: String,
     client_id: Option<String>,
@@ -45,6 +47,7 @@ pub struct Configuration {
 impl Default for Configuration {
     fn default() -> Self {
         Self::new(
+            DEFAULT_ORGANIZATION_ID.to_string(),
             DEFAULT_ENVIRONMENT_ID.to_string(),
             DEFAULT_PROJECT_ID.to_string(),
             None,
@@ -55,17 +58,27 @@ impl Default for Configuration {
 
 impl Configuration {
     pub fn new(
+        organization_id: String,
         environment_id: String,
         project_id: String,
         client_id: Option<String>,
         client_secret: Option<String>,
     ) -> Configuration {
         Self {
+            organization_id,
             environment_id,
             project_id,
             client_id,
             client_secret,
         }
+    }
+
+    pub fn organization_id(&self) -> String {
+        self.organization_id.to_owned()
+    }
+
+    pub fn set_organization_id(&mut self, organization_id: String) {
+        self.organization_id = organization_id.to_owned();
     }
 
     pub fn environment_id(&self) -> String {
