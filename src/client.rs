@@ -898,9 +898,49 @@ impl Client {
         }
     }
 
-    pub async fn register_metadata_definition(&self, _name: &String) -> Result<(), ClientError> {
-        // for some reason, the API always returns Unauthorized when calling this endpoint
-        // I tried with Postman to the same effect
-        Ok(())
+    pub async fn register_metadata_definition(&self, name: &String) -> Result<(), ClientError> {
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert(
+            "organizationId".to_string(),
+            self.organization_id.to_owned(),
+        );
+        token_values.insert("name".to_string(), name.to_owned());
+
+        let path = strfmt(
+            "/assets/v1/organizations/2475245830233/templates/fields",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        log::trace!("POST {}", url);
+        let request = MetadataDefinition {
+            name: name.to_owned(),
+            value_type: "text".to_string(),
+        };
+
+        let response = self
+            .http
+            .post(url)
+            .header("cache-control", "no-cache")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .json(&request)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+
+            log::trace!("Response: {}", content);
+            Ok(())
+        } else {
+            Err(ClientError::UnexpectedResponse(status))
+        }
     }
 }
