@@ -206,12 +206,66 @@ Options:
   -V, --version          Print version
 ````
 
+### Configuration
+
+You need to obtain your own Unity account, create an organization and a project. How you do that is beyond the scope of this tool, but you can read their (Getting Started)[https://services.docs.unity.com/docs/] documentation.
+
+There are five bits of information that you need to use UAMCLI:
+
+* Organization ID - A numeric identifier for your Unity organization
+* Project ID - A alpha-numeric identifier for your Unity project
+* Environment ID - A string identifier for your Unity environment (usually 'production')
+* Key ID - This is the Key ID for your Unity service account. In UAMCLI it is known as the 'client ID'
+* Key Secret - This is the Key Secret for your Unity service account. In UAMCLI it is known as the 'client secret'
+
+The *config set client* command stores the configuration on your system and allows you to make repeated calls later. 
+
+````nushell
+uamcli help config set client
+````
+````
+Sets the clinet properties
+
+Usage: uamcli config set client --organization <organization> --project <project> --environment <environment> --client_id <client_id> --client_secret <client_secret>
+
+Options:
+  -o, --organization <organization>    organization ID
+  -p, --project <project>              tenant ID
+      --environment <environment>      Unity environment ID
+      --client_id <client_id>          Client ID for authentication
+      --client_secret <client_secret>  Client secret for authentication
+  -h, --help                           Print help
+  -V, --version                        Print version
+
+````
+
+Obviously, you will need to use your own values.
+
+All, except the *client secret* is stored in a YAML config file on your computer. The location of this file depents on the operating system you are using. It is the recommended location for configuration files according to your OS.
+You can see where the file is stored by using the *config get path* command:
+
+````nushell
+uamcli config get path
+````
+
+The *client secret* is stored in your operating system's secure credentials manager. It is the vault used by the OS to store sensitive data on your computer. When using UAMCLI you will be prompted by the OS to allow it to store data
+there.
+In the case of Windows, this would be the Credentials Manager. In the case of MacOS, this would be the Keystore. There are similar facilities for all other operating systems.
+
+To view your current client configuration:
+
+````nushell
+uamcli config get client
+````
+
+This will output the current configuration as JSON. It will ***NOT*** display your *client secret*. That cannot be retrieved once set. You will have to reset it if you change it.
 
 ### Uploading data
 
 The Unity Asset Manager has the concept of an *asset*. An asset is a container that may include one or more files under a common name.
 Those files could be anything, but most likelly those would be 3D models. For example, an STL file. To upload data, we use the *asset* command 
 with it's *create* subcommand.
+
 
 ````nushell
 uamcli asset create --name test1 --data data/sample/test.stl
