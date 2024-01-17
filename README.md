@@ -170,6 +170,8 @@ In the example below, we are showing more details about the usage of the 'config
 
 ````bash
 uamcli help config
+````
+````
 working with configuration
 
 Usage: uamcli config <COMMAND>
@@ -190,6 +192,8 @@ You can see that the 'config' command has 'export' subcommand. You can take a mo
 
 ````bash
 uamcli help config export
+````
+````
 export the current configuration in a file
 
 Usage: uamcli config export --output <output>
@@ -207,8 +211,10 @@ The Unity Asset Manager has the concept of an *asset*. An asset is a container t
 Those files could be anything, but most likelly those would be 3D models. For example, an STL file. To upload data, we use the *asset* command 
 with it's *create* subcommand.
 
-````nushell
+````bash
 uamcli asset create --name test1 --data data/sample/test.stl
+````
+````
 {"id":"65a7d8646e7591cfd372ee51","version":"1"}
 ````
 
@@ -222,6 +228,8 @@ If you have more than one file, you can specify the --data argument multiple tim
 
 ````nushell
 uamcli asset create --name test1 --data data/sample/test.stl --data data/sample/test2.stl
+````
+````
 {"id":"65a7d8646e7591cfd372ee51","version":"1"}
 ````
 
@@ -235,6 +243,8 @@ In the example above, the *id* is the asset ID as recorded in UAM. You can use t
 
 ````bash
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1
+````
+````
 {"identity":{"id":"65a7d8646e7591cfd372ee51","version":"1"},"name":"test1","description":null,"tags":null,"system_tags":null,"labels":[],"primary_type":"3D Model","status":"Draft","frozen":false,"source_project_id":"dd572c59-893e-4de9-996f-04
 a60820083c","project_ids":["dd572c59-893e-4de9-996f-04a60820083c"],"preview_file":"","preview_file_dataset_id":"","datasets":[{"datasetId":"75a02d61-4e83-41a2-b809-86c41453f8b8","name":"Source"},{"datasetId":"608ae6a4-b652-4cd1-9a63-f2bddf4e5
 cfd","name":"Preview"}],"metadata":null}
@@ -244,6 +254,8 @@ We could combine that with the ***jq*** tool to get a better formatted JSON:
 
 ````bash
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | jq
+````
+````
 {
   "identity": {
     "id": "65a7d8646e7591cfd372ee51",
@@ -283,6 +295,8 @@ To list all available assets in our Unity project, we can use the ***asset searc
 
 ````bash
 uamcli asset search
+````
+````
 [{"identity":{"id":"65a7d8646e7591cfd372ee51","version":"1"},"name":"test1","description":null,"tags":[],"system_tags":[],"labels":[],"primary_type":"3D Model","status":"Draft","frozen":false,"source_project_id":"dd572c59-893e-4de9-996f-04a60
 820083c","project_ids":["dd572c59-893e-4de9-996f-04a60820083c"],"preview_file":null,"preview_file_dataset_id":"","datasets":null,"metadata":null}]
 ````
@@ -291,6 +305,8 @@ UAMCLI works very well in combination with [NuShell](https://www.nushell.sh). He
 
 ````nushell
 uamcli asset search | from json | select identity.id identity.version name
+````
+````
 ╭───┬──────────────────────────┬──────────────────┬───────╮
 │ # │       identity_id        │ identity_version │ name  │
 ├───┼──────────────────────────┼──────────────────┼───────┤
@@ -313,6 +329,8 @@ To upload metadata to an existing asset, you can use the *asset metadata upload*
 
 ````nushell
 uamcli help asset metadata upload
+````
+````
 Usage: uamcli asset metadata upload --asset-id <asset-id> --asset-version <asset-version> --data <data>
 
 Options:
@@ -332,6 +350,8 @@ The current version of UAMCLI uses CSV format for the metadata. It has only two 
 
 ````bash
 cat data/metadata/metadata.csv
+````
+````
 Name,Value
 Material,TPU
 License,Apache
@@ -357,6 +377,8 @@ To see the effect of the above command, we can use the *asset get* command again
 
 ````nushell
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from json | get metadata
+````
+````
 ╭──────────┬────────╮
 │ Material │ TPU    │
 │ Vendor   │ None   │
