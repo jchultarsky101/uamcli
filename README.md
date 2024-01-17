@@ -127,7 +127,7 @@ UAMCLI is a command line utility program. You execute it in the terminal.
 
 For example, to run it in a BASH shell:
 
-````bash
+````nushell
 uamcli
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
 ║ ║╠═╣║║║  ║  ║  ║
@@ -159,7 +159,7 @@ The stucture of the command line arguments is inspired by the git command and co
 If no command line arguments are provided, it will display the Usxage help as shown before. 
 
 
-````bash
+````nushell
 uamcli help
 ````
 
@@ -168,7 +168,7 @@ To get more detailed help on a particular command, enter it after the 'help' com
 In the example below, we are showing more details about the usage of the 'config' command.
 
 
-````bash
+````nushell
 uamcli help config
 ````
 ````
@@ -190,7 +190,7 @@ Options:
 
 You can see that the 'config' command has 'export' subcommand. You can take a more detailed look:
 
-````bash
+````nushell
 uamcli help config export
 ````
 ````
@@ -211,7 +211,7 @@ The Unity Asset Manager has the concept of an *asset*. An asset is a container t
 Those files could be anything, but most likelly those would be 3D models. For example, an STL file. To upload data, we use the *asset* command 
 with it's *create* subcommand.
 
-````bash
+````nushell
 uamcli asset create --name test1 --data data/sample/test.stl
 ````
 ````
@@ -241,7 +241,7 @@ used as the input to another program.
 
 In the example above, the *id* is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
 
-````bash
+````nushell
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1
 ````
 ````
@@ -252,7 +252,7 @@ cfd","name":"Preview"}],"metadata":null}
 
 We could combine that with the ***jq*** tool to get a better formatted JSON:
 
-````bash
+````nushell
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | jq
 ````
 ````
