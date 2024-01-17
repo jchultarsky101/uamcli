@@ -101,21 +101,13 @@ This project is built with the wonderful programming language Rust.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To get a local copy up and running follow these simple steps.
+Currently the only way to install UAMCLI is to compile it from source code. Clone this repository on your computer, navigate to the project root and compile with Rust:
 
-### Prerequisites
+````nushell
+cargo build
+````
 
-We provide pre-compiled binaries for MacOS and Windows. If you need to execute it on another platform, you can compile from source, or open an issue and we will be happy to provide.
-
-The application runs in the terminal. Therefore, you must have a terminal client and know how to use it.
-
-### Installation
-
-_The following are instructions on how to install the pre-compiled binary_
-
-1. Download the binary for your platform from the link listed under the latest release
-2. Move the binary file to a desired directory on your computer
-3. (Optional) Add the binary to your PATH or create an alias for it to make it easy to execute from any directory
+This will produce an executable for your operating system.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
