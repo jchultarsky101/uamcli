@@ -234,6 +234,8 @@ Options:
 Obviously, you will need to use your own values.
 
 All, except the *client secret* is stored in a YAML config file on your computer. The location of this file depents on the operating system you are using. It is the recommended location for configuration files according to your OS.
+If the file does not exist, a new one will be created. You do not need to edit this file manually. We recommend using the UAMCLI commands to manage it.
+
 You can see where the file is stored by using the *config get path* command:
 
 ````nushell
