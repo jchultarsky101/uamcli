@@ -158,7 +158,7 @@ The stucture of the command line arguments is inspired by the git command and co
 
 ### Help screen
 
-If no command line arguments are provided, it will display the Usxage help as shown before. 
+If no command line arguments are provided, it will display the Usage help as shown before. 
 
 
 ````nushell
