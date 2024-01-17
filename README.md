@@ -200,7 +200,7 @@ Options:
 
 ### Configuration
 
-You need to obtain your own Unity account, create an organization and a project. How you do that is beyond the scope of this tool, but you can read their (Getting Started)[https://services.docs.unity.com/docs/] documentation.
+You need to obtain your own Unity account, create an organization and a project. How you do that is beyond the scope of this tool, but you can read their [Getting Started](https://services.docs.unity.com/docs/) documentation.
 
 There are five bits of information that you need to use UAMCLI:
 
