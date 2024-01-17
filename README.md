@@ -446,9 +446,12 @@ You could save this into a CSV file using NuShell.
 _The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch._
 
 - [x] Add Changelog
-- [ ] Add login/logoff functions
-- [ ] Implement project operations
-- [ ] Implement file operations
+- [x] Add login/logoff functions
+- [x] Implement basic asset operations (create, search, metadata)
+- [x] Implement basic file operations (upload)
+- [ ] Test suite
+- [ ] CI/CD
+- [ ] Support for multiple organizations and projects
 - [ ] Create documentation via Github Pages
 
 See the [open issues](https://github.com/jchultarsky101/uamcli/issues) for a full list of proposed features (and known issues).
