@@ -430,7 +430,7 @@ uamcli asset metadata upload --asset-id 65a7d8646e7591cfd372ee51 --asset-version
 
 If successful, there is no output. Once the command completes, the asset will contain the three metadata properties with their respective values.
 
-***👉 NOTE:***
+***:point_right: NOTE:***
 At the time of writing the Unity Asset Manager is still in beta. Only previously registered metadata field definitions can be used. Make sure you add those definitions to your Unity organization before
 attempting to assign values to them. 
 In the future we should be able to automatically register new metadata field definitions as needed.
