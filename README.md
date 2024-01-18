@@ -92,7 +92,7 @@ Here's why:
 
 This project is built with the wonderful programming language [Rust](https://www.rust-lang.org).
 
-<!-- [![Rust][Rust-logo]][Rust-url] -->
+[![Rust][Rust-logo]][Rust-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -538,4 +538,4 @@ Use this space to list resources you find helpful and would like to give credit 
 [linkedin-url]: https://www.linkedin.com/in/julianchultarsky
 [product-screenshot]: images/screenshot.png
 [Rust-url]: https://www.rust-lang.org/
-[Rust-logo]: http://rust-lang.org/logos/rust-logo-blk.svg
+[Rust-logo]: http://rust-lang.org/logos/rust-logo-color.jpeg

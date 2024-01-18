@@ -30,8 +30,8 @@ const COMMAND_METADATA: &str = "metadata";
 
 const PARAMETER_OUTPUT: &str = "output";
 const PARAMETER_DOWNLOAD_DIR: &str = "download-dir";
-const PARAMETER_CLIENT_ID: &str = "client_id";
-const PARAMETER_CLIENT_SECRET: &str = "client_secret";
+const PARAMETER_CLIENT_ID: &str = "client-id";
+const PARAMETER_CLIENT_SECRET: &str = "client-secret";
 const PARAMETER_ORGANIZATION: &str = "organization";
 const PARAMETER_PROJECT_ID: &str = "project";
 const PARAMETER_ENVIRONMENT_ID: &str = "environment";
@@ -129,28 +129,31 @@ impl Cli {
                     .about("working with configuration")
                     .subcommand_required(true)
                     .subcommand(
-                        Command::new(COMMAND_GET)
-                            .about("displays configuration")
-                            .subcommand(
-                                Command::new(COMMAND_PATH).about("show the configuration path"),
-                            )
-                            .subcommand(
-                                Command::new(COMMAND_CLIENT).about("sets the client properties"),
-                            ),
-                    )
-                    .subcommand(
-                        Command::new(COMMAND_SET)
-                            .about("sets configuration property")
+                        Command::new(COMMAND_CLIENT)
+                            .about("client configuration")
                             .subcommand_required(true)
                             .subcommand(
-                                Command::new(COMMAND_CLIENT)
-                                    .about("Sets the clinet properties")
+                                Command::new(COMMAND_SET)
+                                    .about("sets new client configuration")
                                     .arg(organization_id_parameter)
                                     .arg(project_id_parameter)
                                     .arg(environment_id_parameter)
                                     .arg(client_id_parameter)
                                     .arg(client_secret_parameter),
-                            ),
+                            )
+                            .subcommand(
+                                Command::new(COMMAND_GET)
+                                    .about("prints the current client configuration")        
+                            )
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_PATH)
+                            .about("configuration path")
+                            .subcommand_required(true)
+                            .subcommand(
+                                Command::new(COMMAND_GET)
+                                    .about("prints the default configuration file path")
+                            )
                     )
                     .subcommand(
                         Command::new(COMMAND_EXPORT)
@@ -258,23 +261,16 @@ impl Cli {
         match self.prepare_commands().subcommand() {
             // configuration commands and their parameters
             Some((COMMAND_CONFIG, sub_matches)) => match sub_matches.subcommand() {
-                Some((COMMAND_GET, sub_matches)) => match sub_matches.subcommand() {
-                    Some((COMMAND_PATH, _)) => {
+                Some((COMMAND_PATH, sub_matches)) => match sub_matches.subcommand() {
+                    Some((COMMAND_GET, _)) => {
                         let path = Configuration::get_default_configuration_file_path()?;
                         let path = path.into_os_string().into_string().unwrap();
                         println!("{}", path);
                     }
-                    Some((COMMAND_CLIENT, _sub_matches)) => {
-                        let configuration = api.configuration();
-                        let configuration = configuration.clone();
-                        let configuration = configuration.borrow();
-                        let json = serde_json::to_string(&configuration.clone()).unwrap();
-                        println!("{}", json);
-                    }
                     _ => unreachable!("Invalid command"),
                 },
-                Some((COMMAND_SET, sub_matches)) => match sub_matches.subcommand() {
-                    Some((COMMAND_CLIENT, sub_matches)) => {
+                Some((COMMAND_CLIENT, sub_matches)) => match sub_matches.subcommand() {
+                    Some((COMMAND_SET, sub_matches)) => {
                         let organization_id = sub_matches
                             .get_one::<String>(PARAMETER_ORGANIZATION)
                             .unwrap();
@@ -298,6 +294,13 @@ impl Cli {
                         configuration.set_client_secret(Some(client_secret.to_owned()))?;
 
                         configuration.save_to_default()?;
+                    }
+                    Some((COMMAND_GET, _)) => {
+                        let configuration = api.configuration();
+                        let configuration = configuration.clone();
+                        let configuration = configuration.borrow();
+                        let json = serde_json::to_string(&configuration.clone()).unwrap();
+                        println!("{}", json);
                     }
                     _ => unreachable!("Invalid command"),
                 },
