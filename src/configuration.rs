@@ -1,3 +1,4 @@
+//! Implements program configuration.
 use crate::security::{Keyring, KeyringError};
 use dirs::config_dir;
 use log;
@@ -16,6 +17,7 @@ pub const DEFAULT_ENVIRONMENT_ID: &'static str = "";
 pub const DEFAULT_CONFIGURATION_FILE_NAME: &'static str = "config.yml";
 pub const DEFAULT_CLIENT_SECRET_KEY: &'static str = "client_secret";
 
+/// A wrapper for all configuration errors.
 #[derive(Debug, thiserror::Error)]
 pub enum ConfigurationError {
     #[error("failed to resolve the configuration directory")]
@@ -34,14 +36,15 @@ pub enum ConfigurationError {
     InputOutput(#[from] std::io::Error),
 }
 
+/// Configuration abstraction.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Configuration {
-    organization_id: String,
-    project_id: String,
-    environment_id: String,
-    client_id: Option<String>,
+    organization_id: String,   // Unity organization ID
+    project_id: String,        // Unity project ID
+    environment_id: String,    // Unity environment ID
+    client_id: Option<String>, // Unity Key ID for service account authorization
     #[serde(skip_serializing)]
-    client_secret: Option<String>,
+    client_secret: Option<String>, // Unity Key Secret for service account authentication
 }
 
 impl Default for Configuration {
@@ -117,6 +120,9 @@ impl Configuration {
         self.client_secret.to_owned()
     }
 
+    /// Returns the default configuration file path.
+    ///
+    /// This path is specific to the underlying OS.
     pub fn get_default_configuration_file_path() -> Result<PathBuf, ConfigurationError> {
         let configuration_directory = config_dir();
         match configuration_directory {
@@ -131,6 +137,7 @@ impl Configuration {
         }
     }
 
+    /// Loads the configuration from the default configuration file.
     pub fn load_default() -> Result<Configuration, ConfigurationError> {
         let default_file_path = Configuration::get_default_configuration_file_path()?;
         log::debug!(
@@ -144,6 +151,11 @@ impl Configuration {
         Configuration::load_from_file(default_file_path)
     }
 
+    /// Loads the configuration from a configuration file specified by the provided path.
+    ///
+    /// Parameter:
+    ///
+    /// * path: the path to the configuration file
     pub fn load_from_file(path: PathBuf) -> Result<Configuration, ConfigurationError> {
         // read the configuration from a file
         let result = match fs::read_to_string(path.clone()) {
@@ -176,6 +188,11 @@ impl Configuration {
         }
     }
 
+    /// Writes configuration data.
+    ///
+    /// Parameters:
+    ///
+    /// * writer: an Writer to be used to store the data
     pub fn write(&self, writer: Box<dyn Write>) -> Result<(), ConfigurationError> {
         match serde_yaml::to_writer(writer, &self.clone()) {
             Ok(()) => Ok(()),
@@ -183,6 +200,11 @@ impl Configuration {
         }
     }
 
+    /// Saves configuration data to file.
+    ///
+    /// Parameters:
+    ///
+    /// * path: path to the output configuration file
     pub fn save(&self, path: &PathBuf) -> Result<(), ConfigurationError> {
         // first check if the parent directory exists and try to create it if not
         let configuration_directory = path.parent();
@@ -216,10 +238,12 @@ impl Configuration {
         Ok(())
     }
 
+    /// Saves the configuration data to the default configuration file.
     pub fn save_to_default(&self) -> Result<(), ConfigurationError> {
         self.save(&Self::get_default_configuration_file_path()?)
     }
 
+    /// Deletes the default configuration file.
     pub fn delete(&self) -> Result<(), ConfigurationError> {
         fs::remove_file(&Self::get_default_configuration_file_path()?)?;
 

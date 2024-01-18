@@ -1,3 +1,8 @@
+/// This module provides high-level abstraction client over the Unity REST API.
+///
+/// Currently, only the minimum required  Asset Manager functionality is supported, but future releases may
+/// cover more (e.g. Projects, Organizations, etc.). It is sufficient for most asset-related operations
+/// such as file upload/download.
 use crate::{
     client::Client,
     configuration::Configuration,
@@ -6,6 +11,8 @@ use crate::{
 use std::{cell::RefCell, collections::HashMap, fs::File, path::PathBuf};
 use thiserror::Error;
 
+/// Wrapper error for all errors that may occur while
+/// invoking API functions.
 #[derive(Debug, Error)]
 pub enum ApiError {
     #[error("client ID is not provided or it is invalid")]
@@ -24,12 +31,18 @@ pub enum ApiError {
     AssetNotFound,
 }
 
+/// API client wrapper.
 pub struct Api {
-    configuration: RefCell<Configuration>,
-    client: Option<Client>,
+    configuration: RefCell<Configuration>, // configuration object
+    client: Option<Client>,                // low-level HTTP client object
 }
 
 impl Api {
+    /// Returns a new Api object.
+    ///
+    /// Parameters:
+    ///
+    /// * configuration - thread safe reference to a configuration object
     pub fn new(configuration: &RefCell<Configuration>) -> Api {
         Api {
             configuration: configuration.clone(),
@@ -37,10 +50,13 @@ impl Api {
         }
     }
 
+    /// Returns a thread-safe reference to the configuration object used
+    /// by this API
     pub fn configuration(&self) -> RefCell<Configuration> {
         self.configuration.clone()
     }
 
+    /// Initializes the API wrapper based on the configuration values.
     pub async fn init(&mut self) -> Result<(), ApiError> {
         let organization_id = self.configuration.borrow().organization_id();
         let project_id = self.configuration.borrow().project_id();
@@ -72,12 +88,19 @@ impl Api {
         Ok(())
     }
 
-    pub fn logoff(&mut self) -> Result<(), ApiError> {
-        self.client = None;
+    // Terminates the HTTP session, invalidates the token.
+    //
+    // NOTE: This method is just a place holder and not imlemented for the moment. It is not used when we use service account authenication.
+    // pub fn logoff(&mut self) -> Result<(), ApiError> {
+    //     self.client = None;
+    //     todo!("Implement logoff");
+    // }
 
-        todo!("Implement logoff");
-    }
-
+    /// Returns a list of Asset objects found in this project.
+    ///
+    /// The current implementation returns all assets found in a project.
+    /// It does not use a search criteria to deliver a matching subset.
+    /// More sophisticated version is on the roadmap.
     pub async fn search_asset(&mut self) -> Result<Vec<Asset>, ApiError> {
         self.init().await?;
         log::trace!("Searching for assets...");
@@ -87,6 +110,13 @@ impl Api {
         }
     }
 
+    /// Creates a new asset and uploads related files.
+    ///
+    /// Parameters:
+    ///
+    /// * name - unique asset name as it would apper in the Asset Manager UI
+    /// * description - asset human-readable description
+    /// * data_files - list of PathBuff references for files to be uploaded
     pub async fn create_asset(
         &mut self,
         name: String,
@@ -101,6 +131,14 @@ impl Api {
         }
     }
 
+    /// Returns an Option<Asset>
+    ///
+    /// If an asset with the required identity exists, it will return the asset.
+    /// If there are no matches, it will return None.
+    ///
+    /// Parameters:
+    ///
+    /// * identity: a reference to an AssetIdentity, whcih is comprised by asset ID and asset varsion.
     pub async fn get_asset(&mut self, identity: &AssetIdentity) -> Result<Option<Asset>, ApiError> {
         self.init().await?;
         log::trace!("Retrieving asset {}...", identity.id());
@@ -110,6 +148,16 @@ impl Api {
         }
     }
 
+    /// Sets the status for an existing asset.
+    ///
+    /// In Unity Asset Manager, there is a concept of an asset workflow.
+    /// The value of a status depends on the previous value.
+    /// The normal chain is: draft -> inreview -> approved --> published.
+    /// If the new status is incorrect, an error will be thrown.
+    ///
+    /// Parameters:
+    /// * identity: reference to the asset's identity
+    /// * status: the desired status
     pub async fn set_asset_status(
         &mut self,
         identity: &AssetIdentity,
@@ -123,6 +171,11 @@ impl Api {
         }
     }
 
+    /// Download the files associated with an existing asset.
+    ///
+    /// Parameters:
+    /// * identity: a reference to the asset's identity
+    /// * output_directory: and optional path to the target download directory. If None, the system's default download directory will be used
     pub async fn download_asset(
         &mut self,
         identity: &AssetIdentity,
@@ -138,6 +191,19 @@ impl Api {
         }
     }
 
+    /// Parses an input file, extracts the names and values for all
+    /// properties specified in the file and upserts them to the
+    /// asset.
+    ///
+    /// The current implementation only works with a CSV file format.
+    /// The CSV must have only two columns with a header line containing the column names, which are: Name, Value
+    ///
+    /// Here is an example CSV file that could be used as an input to this function:
+    ///
+    /// ````csv
+    /// Name, Value
+    /// My_property_name, My_property_value
+    /// ````
     pub async fn upload_asset_metadata(
         &mut self,
         identity: &AssetIdentity,

@@ -1,3 +1,5 @@
+/// This module defines the available structure of command line commands and their arguments as well
+/// as the method to parse and execute the command.
 use crate::{
     api::Api,
     configuration::{Configuration, ConfigurationError},
@@ -47,6 +49,8 @@ const BANNER: &'static str = r#"
 
 "#;
 
+/// Wrapper error for all errors that may be produced by
+/// modules at lower level
 #[derive(Debug, Error)]
 pub enum CliError {
     #[error("Configuration Error")]
@@ -63,7 +67,13 @@ impl Default for Cli {
     }
 }
 
+/// Command Line Interface abstraction.
+///
+/// Provides method to declare and execute CLI commands.
 impl Cli {
+    /// Declares the structure of all available CLI commands.
+    ///
+    /// Returns clap::ArgMatches object to be used for command execution.
     fn prepare_commands(&self) -> ArgMatches {
         let output_file_parameter = Arg::new(PARAMETER_OUTPUT)
             .short('o')
@@ -306,6 +316,7 @@ impl Cli {
                     let json = serde_json::to_string(&assets).unwrap();
                     println!("{}", json);
                 }
+                // Asset commands
                 Some((COMMAND_CREATE, sub_matches)) => {
                     let name = sub_matches.get_one::<String>(PARAMETER_NAME).unwrap();
                     let description = sub_matches.get_one::<String>(PARAMETER_DESCRIPTION);
@@ -373,14 +384,10 @@ impl Cli {
 
                         let _ = api.upload_asset_metadata(&identity, data_file_path).await?;
                     }
-                    _ => unreachable!("Invalid subsommand for 'asset metadata'"),
+                    _ => unreachable!("Invalid subsommand for 'asset metadata'"), // this will never be reached because the command is validated first
                 },
                 _ => unreachable!("Invalid subsommand for 'asset'"),
             },
-
-            // Login operations
-
-            // Project operations
             _ => unreachable!("Invalid command"),
         }
 

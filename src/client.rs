@@ -1,3 +1,7 @@
+//! Lower-level HTTP client absraction.
+//!
+//! Contains methods to invoke REST API endpoints.
+//! It is used by the Api struct.
 use crate::model::{Asset, AssetIdentity, AssetStatus, Dataset, MetadataDefinition};
 use base64::{engine::general_purpose, Engine};
 use dirs;
@@ -16,6 +20,7 @@ use thiserror::Error;
 use tokio_util::codec::{BytesCodec, FramedRead};
 use url::Url;
 
+/// Wrapper for all HTTP operation-related errors.
 #[derive(Error, Debug)]
 pub enum ClientError {
     #[error("failed to obtain access token from provider")]
@@ -260,17 +265,27 @@ const UNITY_PRODUCTION_SERVICES_BASE_URL: &'static str = "https://services.unity
 const UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL: &'static str =
     "https://services.api.unity.com";
 
+/// Lower-level HTTP client abstraction.
 #[derive(Debug)]
 pub struct Client {
-    http: HttpClient,
-    organization_id: String,
-    project_id: String,
-    environment_id: String,
-    client_id: String,
-    client_secret: String,
+    http: HttpClient,        // low-level HTTP client object
+    organization_id: String, // Unity organization ID
+    project_id: String,      // Unity project ID
+    environment_id: String,  // Unity environment ID
+    client_id: String,       // Unity Key ID for authenticaion via a service account
+    client_secret: String,   // Unity Key Secret for authentication via a service account
 }
 
 impl Client {
+    /// Returns a new Client instance.
+    ///
+    /// Parameters:
+    ///
+    /// * organization_id: Unity organization ID
+    /// * project_id: Unity project ID
+    /// * environment_id: Unity environment ID
+    /// * client_id: Unity Key ID for authntication via service account
+    /// * client_secret: Unity Key Secret for authentication via service account
     pub fn new(
         organization_id: String,
         project_id: String,
@@ -299,6 +314,12 @@ impl Client {
         Ok(client)
     }
 
+    /// Encodes the credentials for HTTP Basic Authentication purposes.
+    ///
+    /// Parameter:
+    ///
+    /// * client_id: Unity Key ID for a service account
+    /// * client_secret: Unity Key Secret for a service account
     fn encode_credentials(client_id: String, client_secret: String) -> String {
         let combined_credentials = [client_id.clone(), client_secret.clone()]
             .join(":")
@@ -310,7 +331,7 @@ impl Client {
         authorization_header_value
     }
 
-    /// Login by exchanging client ID and client secret for an access token
+    /// Login by exchanging client ID and client secret for an access token (JWT).
     pub async fn login(&mut self) -> Result<String, ClientError> {
         let mut token_values: HashMap<String, String> = HashMap::new();
         token_values.insert("PROJECT_ID".to_string(), self.project_id.to_owned());
@@ -356,6 +377,13 @@ impl Client {
         }
     }
 
+    /// Creates a file in Unity Asset Manager.
+    ///
+    /// Parameters:
+    ///
+    /// * asset_identity: a reference to the asset identity for the asset that will contain this file
+    /// * dataset_id: a Unity Dataset ID to contain the file
+    /// * local_file_path: local path to the file to be uploaded
     async fn create_file(
         &self,
         asset_identity: &AssetIdentity,
@@ -411,6 +439,16 @@ impl Client {
         }
     }
 
+    /// Uploads a file to the Unity Storage Service.
+    ///
+    /// To successlufly upload a file, you need to first create a file record in Unity.
+    /// You can do that by calling the create_file method here.
+    /// Once the file is uploaded successfully, You need to call the finalize_file_upload method.
+    ///
+    /// Parameters:
+    /// * asset_identity: a reference to the asset identity
+    /// * dataset_id: a reference to the Unity Dataset ID
+    /// * local_file_path: a reference to the path for the file to be uploaded
     pub async fn upload_file(
         &self,
         asset_identity: &AssetIdentity,
@@ -464,6 +502,11 @@ impl Client {
         }
     }
 
+    /// Marks the file upload as finalized in the Unity Asset Manager.
+    ///
+    /// Parameters:
+    /// * asset_identity: a reference to the asset identity
+    /// * file_name: a reference to the file name as uploaded to the Unity Storage service
     async fn finalize_file_upload(
         &self,
         asset_identity: &AssetIdentity,
@@ -507,6 +550,11 @@ impl Client {
         }
     }
 
+    /// Returns the download URLs for an existing asset.
+    ///
+    /// Parameters:
+    ///
+    /// * asset_identity: a reference to the asset indetity
     async fn get_asset_download_urls(
         &self,
         asset_identity: &AssetIdentity,
@@ -549,6 +597,12 @@ impl Client {
         }
     }
 
+    /// Doanloads all files associated with a Unity asset.
+    ///
+    /// Parameters:
+    ///
+    /// * asset_identity: a reference to the asset identity
+    /// * output_path: an optional reference to a target download directory path. If None, files will be downloaded to the OS default download directory
     pub async fn download_all_asset_files(
         &self,
         asset_identity: &AssetIdentity,
@@ -573,6 +627,12 @@ impl Client {
         Ok(())
     }
 
+    /// Downloads a single file associated to an asset.
+    ///
+    /// Parameters:
+    ///
+    /// * item: tuple containing the file's path and the download URL
+    /// * output_path: optional reference to a target download directory. If Non, the default OS download directory will be used
     async fn download_file(
         &self,
         item: (PathBuf, Url),
@@ -612,6 +672,12 @@ impl Client {
         }
     }
 
+    /// Creates a new Unity asset. Uploads one or more files to the asset.
+    ///
+    /// Parameters:
+    /// * name - the name of the asset as it would appear in the Unity Asset Manager UI
+    /// * description - human-friendly asset description
+    /// * data_files: vector of references to the local files to be uploaded
     pub async fn create_asset(
         &self,
         name: String,
@@ -672,7 +738,10 @@ impl Client {
         }
     }
 
-    /// Get asset
+    /// Returns asset details of such exists. Returns None if an asset with such identity does not exist.
+    ///
+    /// Parameters:
+    /// * identity: a reference to the asset identity
     pub async fn get_asset(&self, identity: &AssetIdentity) -> Result<Option<Asset>, ClientError> {
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
         let mut token_values: HashMap<String, String> = HashMap::new();
@@ -717,6 +786,13 @@ impl Client {
         }
     }
 
+    /// Updates the asset data in Unity.
+    ///
+    /// You can use this method to rename an asset or to upload metadata for it.
+    ///
+    /// Parameters:
+    ///
+    /// * asset: a reference to the new asset state
     pub async fn update_asset(&self, asset: &Asset) -> Result<(), ClientError> {
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
         let identity = asset.identity();
@@ -759,6 +835,12 @@ impl Client {
         }
     }
 
+    /// Sets the status of an existing asset.
+    ///
+    /// Parameters:
+    ///
+    /// * identity: a reference to the asset identity
+    /// * status: the desired status value
     pub async fn set_asset_status(
         &self,
         identity: &AssetIdentity,
@@ -803,7 +885,11 @@ impl Client {
         }
     }
 
-    /// Searches for an asset and returns a list of assets found
+    /// Searches for an asset and returns a list of assets found.
+    ///
+    /// The current implementation does not take as parameters any search clauses.
+    /// It will simply return all available assets in the project.
+    /// Future versions may provide more control to filter the desired subset.
     pub async fn search_asset(&self) -> Result<Vec<Asset>, ClientError> {
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
         let mut token_values: HashMap<String, String> = HashMap::new();
@@ -848,6 +934,12 @@ impl Client {
         }
     }
 
+    /// Returns the definition for a metadata field from the Unity Organization.
+    /// If such property does not exist, it will return None.
+    ///
+    /// Parameters:
+    ///
+    /// * name: a reference to the property name
     pub async fn get_metadata_definition(
         &self,
         name: &String,
@@ -898,6 +990,14 @@ impl Client {
         }
     }
 
+    /// Creates a new metadata property fiels definition in Unity Organization.
+    ///
+    /// The current implementation only creates field defintions of type 'text'.
+    /// Future versions may allow for the creation of other types available in Unity.
+    ///
+    /// Parameters:
+    ///
+    /// * name: the name of the desired property.
     pub async fn register_metadata_definition(&self, name: &String) -> Result<(), ClientError> {
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL.to_string();
         let mut token_values: HashMap<String, String> = HashMap::new();
