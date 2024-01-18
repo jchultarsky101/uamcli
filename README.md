@@ -90,7 +90,7 @@ Here's why:
 
 ### Built With
 
-This project is built with the wonderful programming language Rust.
+This project is built with the wonderful programming language [Rust](https://www.rust-lang.org).
 
 <!-- [![Rust][Rust-logo]][Rust-url] -->
 
