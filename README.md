@@ -396,9 +396,9 @@ uamcli help asset metadata upload
 Usage: uamcli asset metadata upload --asset-id <asset-id> --asset-version <asset-version> --data <data>
 
 Options:
-      --asset-id <asset-id>            asset ID
-      --asset-version <asset-version>  asset version
-      --data <data>                    file containing the metadata in CSV format with two columns: NAME, VALUE
+      --asset-id <asset-id>            Asset ID
+      --asset-version <asset-version>  Asset version
+      --data <data>                    File containing the metadata in CSV format with two columns: NAME, VALUE
   -h, --help                           Print help
   -V, --version                        Print version
 ````
