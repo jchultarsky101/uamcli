@@ -126,15 +126,15 @@ impl Cli {
             .subcommand(
                 // Configuration
                 Command::new(COMMAND_CONFIG)
-                    .about("working with configuration")
+                    .about("Working with configuration")
                     .subcommand_required(true)
                     .subcommand(
                         Command::new(COMMAND_CLIENT)
-                            .about("client configuration")
+                            .about("Client configuration")
                             .subcommand_required(true)
                             .subcommand(
                                 Command::new(COMMAND_SET)
-                                    .about("sets new client configuration")
+                                    .about("Sets new client configuration")
                                     .arg(organization_id_parameter)
                                     .arg(project_id_parameter)
                                     .arg(environment_id_parameter)
@@ -143,7 +143,7 @@ impl Cli {
                             )
                             .subcommand(
                                 Command::new(COMMAND_GET)
-                                    .about("prints the current client configuration")        
+                                    .about("Prints the current client configuration")        
                             )
                     )
                     .subcommand(
@@ -152,16 +152,16 @@ impl Cli {
                             .subcommand_required(true)
                             .subcommand(
                                 Command::new(COMMAND_GET)
-                                    .about("prints the default configuration file path")
+                                    .about("Prints the default configuration file path")
                             )
                     )
                     .subcommand(
                         Command::new(COMMAND_EXPORT)
-                            .about("export the current configuration in a file")
+                            .about("Exports the current configuration in a file")
                             .arg(output_file_parameter),
                     )
                     .subcommand(
-                        Command::new(COMMAND_DELETE).about("deletes the configuration file"),
+                        Command::new(COMMAND_DELETE).about("Deletes the configuration file"),
                     ),
             )
             .subcommand(
@@ -190,14 +190,14 @@ impl Cli {
                                 Arg::new(PARAMETER_DESCRIPTION)
                                     .long(PARAMETER_DESCRIPTION)
                                     .required(false)
-                                    .help("asset description"),
+                                    .help("Asset description"),
                             )
                             .arg(
                                 Arg::new(PARAMETER_DATA_FILE)
                                     .long(PARAMETER_DATA_FILE)
                                     .required(true)
                                     .action(clap::ArgAction::Append)
-                                    .help("file containing the 3D model data")
+                                    .help("File containing the 3D model data")
                                     .value_parser(clap::value_parser!(PathBuf)),
                             ),
                     )
@@ -210,7 +210,7 @@ impl Cli {
                                 Arg::new(PARAMETER_DOWNLOAD_DIR)
                                     .long(PARAMETER_DOWNLOAD_DIR)
                                     .required(false)
-                                    .help("download directory path")
+                                    .help("Download directory path")
                                     .value_parser(clap::value_parser!(PathBuf)),
                             ),
                     )
@@ -225,7 +225,7 @@ impl Cli {
                                         Arg::new(PARAMETER_STATUS)
                                             .long(PARAMETER_STATUS)
                                             .required(true)
-                                            .help("asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)")
+                                            .help("Asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)")
                                     ),
                             ),
                     )
@@ -241,7 +241,7 @@ impl Cli {
                                             .long(PARAMETER_DATA_FILE)
                                             .required(true)
                                             .action(clap::ArgAction::Append)
-                                            .help("file containing the metadata in CSV format with two columns: NAME, VALUE")
+                                            .help("File containing the metadata in CSV format with two columns: NAME, VALUE")
                                             .value_parser(clap::value_parser!(PathBuf)),
                                     ),
                             )
