@@ -103,7 +103,7 @@ This project is built with the wonderful programming language [Rust](https://www
 
 Currently the only way to install UAMCLI is to compile it from source code. Clone this repository on your computer, navigate to the project root and compile with Rust:
 
-````nushell
+````bash
 cargo build
 ````
 
@@ -119,7 +119,7 @@ UAMCLI is a command line utility program. You execute it in the terminal.
 
 For example, to run it in a BASH shell:
 
-````nushell
+````bash
 uamcli
 ````
 ````
@@ -144,10 +144,10 @@ The stucture of the command line arguments is inspired by the git command and co
 If no command line arguments are provided, it will display the Usage help as shown before. 
 
 
-````nushell
+````bash
 uamcli help
 ````
-````nushell
+````
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
 ║ ║╠═╣║║║  ║  ║  ║
 ╚═╝╩ ╩╩ ╩  ╚═╝╩═╝╩
@@ -175,7 +175,7 @@ To get more detailed help on a particular command, enter it after the 'help' com
 In the example below, we are showing more details about the usage of the 'config' command.
 
 
-````nushell
+````bash
 uamcli help config
 ````
 ````
@@ -197,7 +197,7 @@ Options:
 
 You can see that the 'config' command has 'export' subcommand. You can take a more detailed look:
 
-````nushell
+````bash
 uamcli help config export
 ````
 ````
@@ -225,7 +225,7 @@ There are five bits of information that you need to use UAMCLI:
 
 The *config set client* command stores the configuration on your system and allows you to make repeated calls later. 
 
-````nushell
+````bash
 uamcli help config client set
 ````
 ````
@@ -250,7 +250,7 @@ If the file does not exist, a new one will be created. You do not need to edit t
 
 You can see where the file is stored by using the *config path get* command:
 
-````nushell
+````bash
 uamcli config path get
 ````
 
@@ -260,7 +260,7 @@ In the case of Windows, this would be the Credentials Manager. In the case of Ma
 
 To view your current client configuration:
 
-````nushell
+````bash
 uamcli config client get
 ````
 
@@ -273,7 +273,7 @@ Those files could be anything, but most likelly those would be 3D models. For ex
 with it's *create* subcommand.
 
 
-````nushell
+````bash
 uamcli asset create --name test1 --data data/sample/test.stl
 ````
 ````
@@ -288,7 +288,7 @@ The arguments we provided are as follows:
 If you have more than one file, you can specify the --data argument multiple times as necessary:
 
 
-````nushell
+````bash
 uamcli asset create --name test1 --data data/sample/test.stl --data data/sample/test2.stl
 ````
 ````
@@ -303,7 +303,7 @@ used as the input to another program.
 
 In the example above, the *id* is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
 
-````nushell
+````bash
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1
 ````
 ````
@@ -314,7 +314,7 @@ cfd","name":"Preview"}],"metadata":null}
 
 We could combine that with the ***jq*** tool to get a better formatted JSON:
 
-````nushell
+````bash
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | jq
 ````
 ````
@@ -355,7 +355,7 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | jq
 
 To list all available assets in our Unity project, we can use the ***asset search*** command:
 
-````nushell
+````bash
 uamcli asset search
 ````
 ````
@@ -389,7 +389,7 @@ may add support for other types (e.g. boolean, etc.).
 
 To upload metadata to an existing asset, you can use the *asset metadata upload* command.
 
-````nushell
+````bash
 uamcli help asset metadata upload
 ````
 ````
