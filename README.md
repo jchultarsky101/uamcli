@@ -436,7 +436,11 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from js
 ╰──────────┴────────╯
 ````
 
-You could save this into a CSV file using NuShell.
+You could save this into the same CSV file format with the header using NuShell:
+
+````nushell
+uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from json | get metadata | columns | each {|c| [['Name', 'Value']; [$c, ($props | get $c)]]} | flatten | to csv | save data/metadata/metadata2.csv
+````
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
