@@ -123,27 +123,18 @@ For example, to run it in a BASH shell:
 uamcli
 ````
 ````
-╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
-║ ║╠═╣║║║  ║  ║  ║
-╚═╝╩ ╩╩ ╩  ╚═╝╩═╝╩
-
-
-
 Command Line Interface for the Unity Asset Manager
 
 Usage: uamcli <COMMAND>
 
 Commands:
-  config  working with configuration
+  config  Working with configuration
   asset   Digital asset operations
   help    Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help
-          Print help (see a summary with '-h')
-
-  -V, --version
-          Print versio
+  -h, --help     Print help (see more with '--help')
+  -V, --version  Print version
 ````
 
 The stucture of the command line arguments is inspired by the git command and contains commands and subcommands. 
@@ -156,7 +147,29 @@ If no command line arguments are provided, it will display the Usage help as sho
 ````nushell
 uamcli help
 ````
+````nushell
+╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
+║ ║╠═╣║║║  ║  ║  ║
+╚═╝╩ ╩╩ ╩  ╚═╝╩═╝╩
 
+
+
+Command Line Interface for the Unity Asset Manager
+
+Usage: uamcli <COMMAND>
+
+Commands:
+  config  Working with configuration
+  asset   Digital asset operations
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+````
 
 To get more detailed help on a particular command, enter it after the 'help' command. You can see the available commands.
 In the example below, we are showing more details about the usage of the 'config' command.
@@ -166,15 +179,15 @@ In the example below, we are showing more details about the usage of the 'config
 uamcli help config
 ````
 ````
-working with configuration
+Working with configuration
 
 Usage: uamcli config <COMMAND>
 
 Commands:
-  get     displays configuration
-  set     sets configuration property
-  export  export the current configuration in a file
-  delete  deletes the configuration file
+  client  Client configuration
+  path    configuration path
+  export  Exports the current configuration in a file
+  delete  Deletes the configuration file
   help    Print this message or the help of the given subcommand(s)
 
 Options:
@@ -188,12 +201,12 @@ You can see that the 'config' command has 'export' subcommand. You can take a mo
 uamcli help config export
 ````
 ````
-export the current configuration in a file
+Exports the current configuration in a file
 
 Usage: uamcli config export --output <output>
 
 Options:
-  -o, --output <output>  output file path
+  -o, --output <output>  Output file path
   -h, --help             Print help
   -V, --version          Print version
 ````
@@ -213,22 +226,21 @@ There are five bits of information that you need to use UAMCLI:
 The *config set client* command stores the configuration on your system and allows you to make repeated calls later. 
 
 ````nushell
-uamcli help config set client
+uamcli help config client set
 ````
 ````
-Sets the clinet properties
+Sets new client configuration
 
-Usage: uamcli config set client --organization <organization> --project <project> --environment <environment> --client_id <client_id> --client_secret <client_secret>
+Usage: uamcli config client set --organization <organization> --project <project> --environment <environment> --client-id <client-id> --client-secret <client-secret>
 
 Options:
-  -o, --organization <organization>    organization ID
-  -p, --project <project>              tenant ID
+  -o, --organization <organization>    Organization ID
+  -p, --project <project>              Tenant ID
       --environment <environment>      Unity environment ID
-      --client_id <client_id>          Client ID for authentication
-      --client_secret <client_secret>  Client secret for authentication
+      --client-id <client-id>          Client ID for authentication
+      --client-secret <client-secret>  Client secret for authentication
   -h, --help                           Print help
   -V, --version                        Print version
-
 ````
 
 Obviously, you will need to use your own values.
@@ -236,10 +248,10 @@ Obviously, you will need to use your own values.
 All, except the *client secret* is stored in a YAML config file on your computer. The location of this file depents on the operating system you are using. It is the recommended location for configuration files according to your OS.
 If the file does not exist, a new one will be created. You do not need to edit this file manually. We recommend using the UAMCLI commands to manage it.
 
-You can see where the file is stored by using the *config get path* command:
+You can see where the file is stored by using the *config path get* command:
 
 ````nushell
-uamcli config get path
+uamcli config path get
 ````
 
 The *client secret* is stored in your operating system's secure credentials manager. It is the vault used by the OS to store sensitive data on your computer. When using UAMCLI you will be prompted by the OS to allow it to store data
@@ -249,7 +261,7 @@ In the case of Windows, this would be the Credentials Manager. In the case of Ma
 To view your current client configuration:
 
 ````nushell
-uamcli config get client
+uamcli config client get
 ````
 
 This will output the current configuration as JSON. It will ***NOT*** display your *client secret*. That cannot be retrieved once set. You will have to reset it if you change it.

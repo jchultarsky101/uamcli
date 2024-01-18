@@ -80,20 +80,20 @@ impl Cli {
             .long(PARAMETER_OUTPUT)
             .num_args(1)
             .required(true)
-            .help("output file path")
+            .help("Output file path")
             .value_parser(clap::value_parser!(PathBuf));
         let organization_id_parameter = Arg::new(PARAMETER_ORGANIZATION)
             .short('o')
             .long(PARAMETER_ORGANIZATION)
             .num_args(1)
             .required(true)
-            .help("organization ID");
+            .help("Organization ID");
         let project_id_parameter = Arg::new(PARAMETER_PROJECT_ID)
             .short('p')
             .long(PARAMETER_PROJECT_ID)
             .num_args(1)
             .required(true)
-            .help("tenant ID");
+            .help("Tenant ID");
         let client_id_parameter = Arg::new(PARAMETER_CLIENT_ID)
             .long(PARAMETER_CLIENT_ID)
             .required(true)
@@ -109,11 +109,11 @@ impl Cli {
         let asset_id_parameter = Arg::new(PARAMETER_ASSET_ID)
             .long(PARAMETER_ASSET_ID)
             .required(true)
-            .help("asset ID");
+            .help("Asset ID");
         let asset_version_parameter = Arg::new(PARAMETER_ASSET_VERSION)
             .long(PARAMETER_ASSET_VERSION)
             .required(true)
-            .help("asset version");
+            .help("Asset version");
 
         Command::new(env!("CARGO_PKG_NAME"))
             .version(env!("CARGO_PKG_VERSION"))
