@@ -92,7 +92,7 @@ Here's why:
 
 This project is built with the wonderful programming language [Rust](https://www.rust-lang.org).
 
-[![Rust][Rust-logo]][Rust-url]>
+[![Rust][Rust-logo]][Rust-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
