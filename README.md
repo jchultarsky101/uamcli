@@ -430,10 +430,12 @@ uamcli asset metadata upload --asset-id 65a7d8646e7591cfd372ee51 --asset-version
 
 If successful, there is no output. Once the command completes, the asset will contain the three metadata properties with their respective values.
 
+---
 **_:point_right: NOTE:_**
 At the time of writing the Unity Asset Manager is still in beta. Only previously registered metadata field definitions can be used. Make sure you add those definitions to your Unity organization before
 attempting to assign values to them. 
 In the future we should be able to automatically register new metadata field definitions as needed.
+---
 
 To see the effect of the above command, we can use the *asset get* command again and with the help of NuShell we can subselect the metadata from the output:
 
