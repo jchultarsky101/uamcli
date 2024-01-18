@@ -185,7 +185,7 @@ Usage: uamcli config <COMMAND>
 
 Commands:
   client  Client configuration
-  path    configuration path
+  path    Configuration path
   export  Exports the current configuration in a file
   delete  Deletes the configuration file
   help    Print this message or the help of the given subcommand(s)
