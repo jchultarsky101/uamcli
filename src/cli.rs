@@ -148,7 +148,7 @@ impl Cli {
                     )
                     .subcommand(
                         Command::new(COMMAND_PATH)
-                            .about("configuration path")
+                            .about("Configuration path")
                             .subcommand_required(true)
                             .subcommand(
                                 Command::new(COMMAND_GET)
