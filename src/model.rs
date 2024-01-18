@@ -1,7 +1,9 @@
+//! Data model structures for interfacing with Unity
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, str::FromStr};
 use thiserror::Error;
 
+/// A wrapper for all errors generated when working with asset status.
 #[derive(Debug, Error)]
 pub struct AssetStatusParseError(String);
 
@@ -11,6 +13,7 @@ impl std::fmt::Display for AssetStatusParseError {
     }
 }
 
+/// Unity Asset status abstraction.
 #[derive(Debug, PartialEq, PartialOrd, Clone, Serialize, Deserialize)]
 pub enum AssetStatus {
     Draft,
@@ -55,10 +58,11 @@ impl FromStr for AssetStatus {
     }
 }
 
+/// Asset identity abstraction.
 #[derive(Debug, PartialEq, PartialOrd, Clone, Serialize, Deserialize)]
 pub struct AssetIdentity {
-    id: String,
-    version: String,
+    id: String,      // Unity asset ID
+    version: String, // Unity asset version
 }
 
 impl AssetIdentity {
@@ -83,6 +87,7 @@ impl AssetIdentity {
     }
 }
 
+/// Unity Dataset abstraction.
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Dataset {
     #[serde(rename = "datasetId")]
@@ -113,6 +118,7 @@ impl Dataset {
     }
 }
 
+/// Unity Asset abstraction
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Asset {
     identity: AssetIdentity,
@@ -290,6 +296,7 @@ impl Asset {
     }
 }
 
+/// Unity metadata property abstraction.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MetadataEntry {
     #[serde(rename = "Name")]
@@ -298,6 +305,7 @@ pub struct MetadataEntry {
     pub value: Option<String>,
 }
 
+/// Unity metadata field definition abstraction.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MetadataDefinition {
     #[serde(rename = "name")]

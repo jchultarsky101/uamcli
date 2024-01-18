@@ -73,9 +73,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](images/screenshot.png)
+<!-- [![Product Name Screen Shot][product-screenshot]](images/screenshot.png) -->
 
-The [Unity Asset Manager](https://unity.com/products/asset-manager) is a great way to manage digital 3D (and other) assets. The Unity team provides a family of helpful APIs for different purposes. One of those is specificlly
+The [Unity Asset Manager](https://unity.com/products/asset-manager) is a great way to manage digital 3D (and other) assets. The Unity team provides a family of helpful APIs for different purposes. One of those is specifically
 designed for interfacing with the Asset Manager. Unity also provides useful SDKs to help with the development of client applications.
 
 The reason for this project is to implement a client for those APIs in the Rust language. 
@@ -492,7 +492,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
+Your Name - [@jchultarsky101](https://twitter.com/jchultarsky101) - jchultarsky@physna.com
 
 Project Link: [https://github.com/jchultarsky101/uamcli](https://github.com/jchultarsky101/uamcli)
 
