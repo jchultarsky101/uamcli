@@ -30,8 +30,8 @@ const COMMAND_METADATA: &str = "metadata";
 
 const PARAMETER_OUTPUT: &str = "output";
 const PARAMETER_DOWNLOAD_DIR: &str = "download-dir";
-const PARAMETER_CLIENT_ID: &str = "client_id";
-const PARAMETER_CLIENT_SECRET: &str = "client_secret";
+const PARAMETER_CLIENT_ID: &str = "client-id";
+const PARAMETER_CLIENT_SECRET: &str = "client-secret";
 const PARAMETER_ORGANIZATION: &str = "organization";
 const PARAMETER_PROJECT_ID: &str = "project";
 const PARAMETER_ENVIRONMENT_ID: &str = "environment";
@@ -80,20 +80,20 @@ impl Cli {
             .long(PARAMETER_OUTPUT)
             .num_args(1)
             .required(true)
-            .help("output file path")
+            .help("Output file path")
             .value_parser(clap::value_parser!(PathBuf));
         let organization_id_parameter = Arg::new(PARAMETER_ORGANIZATION)
             .short('o')
             .long(PARAMETER_ORGANIZATION)
             .num_args(1)
             .required(true)
-            .help("organization ID");
+            .help("Organization ID");
         let project_id_parameter = Arg::new(PARAMETER_PROJECT_ID)
             .short('p')
             .long(PARAMETER_PROJECT_ID)
             .num_args(1)
             .required(true)
-            .help("tenant ID");
+            .help("Tenant ID");
         let client_id_parameter = Arg::new(PARAMETER_CLIENT_ID)
             .long(PARAMETER_CLIENT_ID)
             .required(true)
@@ -109,11 +109,11 @@ impl Cli {
         let asset_id_parameter = Arg::new(PARAMETER_ASSET_ID)
             .long(PARAMETER_ASSET_ID)
             .required(true)
-            .help("asset ID");
+            .help("Asset ID");
         let asset_version_parameter = Arg::new(PARAMETER_ASSET_VERSION)
             .long(PARAMETER_ASSET_VERSION)
             .required(true)
-            .help("asset version");
+            .help("Asset version");
 
         Command::new(env!("CARGO_PKG_NAME"))
             .version(env!("CARGO_PKG_VERSION"))
@@ -126,39 +126,42 @@ impl Cli {
             .subcommand(
                 // Configuration
                 Command::new(COMMAND_CONFIG)
-                    .about("working with configuration")
+                    .about("Working with configuration")
                     .subcommand_required(true)
                     .subcommand(
-                        Command::new(COMMAND_GET)
-                            .about("displays configuration")
-                            .subcommand(
-                                Command::new(COMMAND_PATH).about("show the configuration path"),
-                            )
-                            .subcommand(
-                                Command::new(COMMAND_CLIENT).about("sets the client properties"),
-                            ),
-                    )
-                    .subcommand(
-                        Command::new(COMMAND_SET)
-                            .about("sets configuration property")
+                        Command::new(COMMAND_CLIENT)
+                            .about("Client configuration")
                             .subcommand_required(true)
                             .subcommand(
-                                Command::new(COMMAND_CLIENT)
-                                    .about("Sets the clinet properties")
+                                Command::new(COMMAND_SET)
+                                    .about("Sets new client configuration")
                                     .arg(organization_id_parameter)
                                     .arg(project_id_parameter)
                                     .arg(environment_id_parameter)
                                     .arg(client_id_parameter)
                                     .arg(client_secret_parameter),
-                            ),
+                            )
+                            .subcommand(
+                                Command::new(COMMAND_GET)
+                                    .about("Prints the current client configuration")        
+                            )
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_PATH)
+                            .about("Configuration path")
+                            .subcommand_required(true)
+                            .subcommand(
+                                Command::new(COMMAND_GET)
+                                    .about("Prints the default configuration file path")
+                            )
                     )
                     .subcommand(
                         Command::new(COMMAND_EXPORT)
-                            .about("export the current configuration in a file")
+                            .about("Exports the current configuration in a file")
                             .arg(output_file_parameter),
                     )
                     .subcommand(
-                        Command::new(COMMAND_DELETE).about("deletes the configuration file"),
+                        Command::new(COMMAND_DELETE).about("Deletes the configuration file"),
                     ),
             )
             .subcommand(
@@ -187,14 +190,14 @@ impl Cli {
                                 Arg::new(PARAMETER_DESCRIPTION)
                                     .long(PARAMETER_DESCRIPTION)
                                     .required(false)
-                                    .help("asset description"),
+                                    .help("Asset description"),
                             )
                             .arg(
                                 Arg::new(PARAMETER_DATA_FILE)
                                     .long(PARAMETER_DATA_FILE)
                                     .required(true)
                                     .action(clap::ArgAction::Append)
-                                    .help("file containing the 3D model data")
+                                    .help("File containing the 3D model data")
                                     .value_parser(clap::value_parser!(PathBuf)),
                             ),
                     )
@@ -207,7 +210,7 @@ impl Cli {
                                 Arg::new(PARAMETER_DOWNLOAD_DIR)
                                     .long(PARAMETER_DOWNLOAD_DIR)
                                     .required(false)
-                                    .help("download directory path")
+                                    .help("Download directory path")
                                     .value_parser(clap::value_parser!(PathBuf)),
                             ),
                     )
@@ -222,7 +225,7 @@ impl Cli {
                                         Arg::new(PARAMETER_STATUS)
                                             .long(PARAMETER_STATUS)
                                             .required(true)
-                                            .help("asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)")
+                                            .help("Asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)")
                                     ),
                             ),
                     )
@@ -238,7 +241,7 @@ impl Cli {
                                             .long(PARAMETER_DATA_FILE)
                                             .required(true)
                                             .action(clap::ArgAction::Append)
-                                            .help("file containing the metadata in CSV format with two columns: NAME, VALUE")
+                                            .help("File containing the metadata in CSV format with two columns: NAME, VALUE")
                                             .value_parser(clap::value_parser!(PathBuf)),
                                     ),
                             )
@@ -258,23 +261,16 @@ impl Cli {
         match self.prepare_commands().subcommand() {
             // configuration commands and their parameters
             Some((COMMAND_CONFIG, sub_matches)) => match sub_matches.subcommand() {
-                Some((COMMAND_GET, sub_matches)) => match sub_matches.subcommand() {
-                    Some((COMMAND_PATH, _)) => {
+                Some((COMMAND_PATH, sub_matches)) => match sub_matches.subcommand() {
+                    Some((COMMAND_GET, _)) => {
                         let path = Configuration::get_default_configuration_file_path()?;
                         let path = path.into_os_string().into_string().unwrap();
                         println!("{}", path);
                     }
-                    Some((COMMAND_CLIENT, _sub_matches)) => {
-                        let configuration = api.configuration();
-                        let configuration = configuration.clone();
-                        let configuration = configuration.borrow();
-                        let json = serde_json::to_string(&configuration.clone()).unwrap();
-                        println!("{}", json);
-                    }
                     _ => unreachable!("Invalid command"),
                 },
-                Some((COMMAND_SET, sub_matches)) => match sub_matches.subcommand() {
-                    Some((COMMAND_CLIENT, sub_matches)) => {
+                Some((COMMAND_CLIENT, sub_matches)) => match sub_matches.subcommand() {
+                    Some((COMMAND_SET, sub_matches)) => {
                         let organization_id = sub_matches
                             .get_one::<String>(PARAMETER_ORGANIZATION)
                             .unwrap();
@@ -298,6 +294,13 @@ impl Cli {
                         configuration.set_client_secret(Some(client_secret.to_owned()))?;
 
                         configuration.save_to_default()?;
+                    }
+                    Some((COMMAND_GET, _)) => {
+                        let configuration = api.configuration();
+                        let configuration = configuration.clone();
+                        let configuration = configuration.borrow();
+                        let json = serde_json::to_string(&configuration.clone()).unwrap();
+                        println!("{}", json);
                     }
                     _ => unreachable!("Invalid command"),
                 },
