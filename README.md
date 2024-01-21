@@ -85,6 +85,12 @@ Here's why:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Change Log
+
+The current version is v0.1.0. It is a pre-release version. 
+
+[Changelog](/CHANGELOG.md)
+
 
 ### Built With
 
