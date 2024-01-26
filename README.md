@@ -19,9 +19,11 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
+<!--
   <a href="https://github.com/jchultarsky101/uamcli">
     <img src="images/logo.png" alt="Logo" width="240" height="240">
   </a>
+-->
 
   <h3 align="center">UAM CLI</h3>
 
