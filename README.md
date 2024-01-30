@@ -230,19 +230,19 @@ There are five bits of information that you need to use UAMCLI:
 The *config set client* command stores the configuration on your system and allows you to make repeated calls later. 
 
 ````bash
-uamcli help config client set
+uamcli help config set client
 ````
 ````
 Sets new client configuration
 
-Usage: uamcli config client set --organization <organization> --project <project> --environment <environment> --client-id <client-id> --client-secret <client-secret>
+Usage: uamcli config set client --organization <organization> --project <project> --environment <environment> --client_id <client_id> --client_secret <client_secret>
 
 Options:
   -o, --organization <organization>    Organization ID
   -p, --project <project>              Tenant ID
       --environment <environment>      Unity environment ID
-      --client-id <client-id>          Client ID for authentication
-      --client-secret <client-secret>  Client secret for authentication
+      --client_id <client-id>          Client ID for authentication
+      --client_secret <client-secret>  Client secret for authentication
   -h, --help                           Print help
   -V, --version                        Print version
 ````
@@ -255,7 +255,7 @@ If the file does not exist, a new one will be created. You do not need to edit t
 You can see where the file is stored by using the *config path get* command:
 
 ````bash
-uamcli config path get
+uamcli config get path
 ````
 
 The *client secret* is stored in your operating system's secure credentials manager. It is the vault used by the OS to store sensitive data on your computer. When using UAMCLI you will be prompted by the OS to allow it to store data
@@ -265,7 +265,7 @@ In the case of Windows, this would be the Credentials Manager. In the case of Ma
 To view your current client configuration:
 
 ````bash
-uamcli config client get
+uamcli config get client
 ````
 
 This will output the current configuration as JSON. It will ***NOT*** display your *client secret*. That cannot be retrieved once set. You will have to reset it if you change it.
