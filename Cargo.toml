@@ -1,9 +1,10 @@
 [package]
 name = "uamcli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Julian Chultarsky <jchultarsky@physna.com>"]
 description = "Command Line Interface for the Unity Asset Manager"
+repository = "https://github.com/jchultarsky101/uamcli.git"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -29,3 +30,21 @@ thiserror = "1.0.51"
 tokio = { version = "1.35.1", features = ["full"] }
 tokio-util = { version = "0.7.10", features = ["full"] }
 url = { version = "2.5.0", features = ["serde"] }
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.8.2"
+# CI backends to support
+ci = ["github"]
+# The installers to generate for each app
+installers = []
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
