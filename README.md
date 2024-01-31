@@ -461,10 +461,10 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from js
 
 _The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch._
 
-- [x] Add Changelog
 - [x] Add login/logoff functions
 - [x] Implement basic asset operations (create, search, metadata)
 - [x] Implement basic file operations (upload)
+- [ ] Add Changelog
 - [ ] Test suite
 - [ ] CI/CD
 - [ ] Support for multiple organizations and projects
