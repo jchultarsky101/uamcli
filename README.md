@@ -85,18 +85,11 @@ Here's why:
 * There is no SDK (as of end of 2023) for Rust
 * We like Unity and what they do :smile:
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 ### Built With
 
 This project is built with the wonderful programming language [Rust](https://www.rust-lang.org).
 
 [![Rust][Rust-logo]][Rust-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -108,9 +101,6 @@ cargo build
 ````
 
 This will produce an executable for your operating system.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -454,8 +444,6 @@ You could save this into the same CSV file format with the header using NuShell:
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from json | get metadata | columns | each {|c| [['Name', 'Value']; [$c, ($props | get $c)]]} | flatten | to csv | save data/metadata/metadata2.csv
 ````
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 <!-- ROADMAP -->
 ## Roadmap
 
@@ -472,8 +460,6 @@ _The project is work in progress. No release has been provided as of yet. Most o
 
 See the [open issues](https://github.com/jchultarsky101/uamcli/issues) for a full list of proposed features (and known issues).
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 <!-- CONTRIBUTING -->
 ## Contributing
 
@@ -488,18 +474,10 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
 <!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- CONTACT -->
 ## Contact
@@ -507,10 +485,6 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 Julian Chultarsky - [@jchultarsky101](https://twitter.com/jchultarsky101) - jchultarsky@physna.com
 
 Project Link: [https://github.com/jchultarsky101/uamcli](https://github.com/jchultarsky101/uamcli)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
@@ -529,10 +503,6 @@ Use this space to list resources you find helpful and would like to give credit 
 * [Env](https://crates.io/crates/env)
 * [Keyring](https://crates.io/crates/keyring)
 * [Log](https://crates.io/crates/log)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
