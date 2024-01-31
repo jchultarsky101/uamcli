@@ -33,7 +33,7 @@
     <a href="https://jchultarsky101.github.io/uamcli/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/jchultarsky101/uamcli">View Demo</a>
+    <a href="https://github.com/jchultarsky101/uamcli/tree/main/images">View Demo</a>
     ·
     <a href="https://github.com/jchultarsky101/uamcli/issues">Report Bug</a>
     ·
