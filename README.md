@@ -504,7 +504,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@jchultarsky101](https://twitter.com/jchultarsky101) - jchultarsky@physna.com
+Julian Chultarsky - [@jchultarsky101](https://twitter.com/jchultarsky101) - jchultarsky@physna.com
 
 Project Link: [https://github.com/jchultarsky101/uamcli](https://github.com/jchultarsky101/uamcli)
 
