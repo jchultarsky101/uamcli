@@ -94,7 +94,13 @@ This project is built with the wonderful programming language [Rust](https://www
 <!-- GETTING STARTED -->
 ## Getting Started
 
-Currently the only way to install UAMCLI is to compile it from source code. Clone this repository on your computer, navigate to the project root and compile with Rust:
+### Downloading a pre-compiled binary
+
+You can download a pre-compiled binary for your platform from the [documentation site](https://jchultarsky101.github.io/uamcli). You will have uncompress it and copy the file to location of your choice.
+
+### Compilation from source
+
+You would need to have Rust installed on your computer to use this method. Clone this repository on your computer, navigate to the project root and compile with Rust:
 
 ````bash
 cargo build
