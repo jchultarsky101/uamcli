@@ -30,7 +30,7 @@
   <p align="center">
     Command Line Interface client for the Unity Asset Manager API
     <br />
-    <a href="https://github.com/jchultarsky101/uamcli"><strong>Explore the docs »</strong></a>
+    <a href="https://jchultarsky101.github.io/uamcli/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/jchultarsky101/uamcli">View Demo</a>
@@ -78,7 +78,7 @@
 The [Unity Asset Manager](https://unity.com/products/asset-manager) is a great way to manage digital 3D (and other) assets. The Unity team provides a family of helpful APIs for different purposes. One of those is specifically
 designed for interfacing with the Asset Manager. Unity also provides useful SDKs to help with the development of client applications.
 
-The reason for this project is to implement a client for those APIs in the Rust language. 
+The reason for this project is to implement a client for those APIs in the Rust language.
 
 Here's why:
 * Rust is quickly becoming very popular with developers
@@ -115,7 +115,7 @@ This will produce an executable for your operating system.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-UAMCLI is a command line utility program. You execute it in the terminal. 
+UAMCLI is a command line utility program. You execute it in the terminal.
 
 For example, to run it in a BASH shell:
 
@@ -137,11 +137,11 @@ Options:
   -V, --version  Print version
 ````
 
-The stucture of the command line arguments is inspired by the git command and contains commands and subcommands. 
+The stucture of the command line arguments is inspired by the git command and contains commands and subcommands.
 
 ### Help screen
 
-If no command line arguments are provided, it will display the Usage help as shown before. 
+If no command line arguments are provided, it will display the Usage help as shown before.
 
 
 ````bash
@@ -223,7 +223,7 @@ There are five bits of information that you need to use UAMCLI:
 * Key ID - This is the Key ID for your Unity service account. In UAMCLI it is known as the 'client ID'
 * Key Secret - This is the Key Secret for your Unity service account. In UAMCLI it is known as the 'client secret'
 
-The *config set client* command stores the configuration on your system and allows you to make repeated calls later. 
+The *config set client* command stores the configuration on your system and allows you to make repeated calls later.
 
 ````bash
 uamcli help config client set
@@ -269,7 +269,7 @@ This will output the current configuration as JSON. It will ***NOT*** display yo
 ### Uploading data
 
 The Unity Asset Manager has the concept of an *asset*. An asset is a container that may include one or more files under a common name.
-Those files could be anything, but most likelly those would be 3D models. For example, an STL file. To upload data, we use the *asset* command 
+Those files could be anything, but most likelly those would be 3D models. For example, an STL file. To upload data, we use the *asset* command
 with it's *create* subcommand.
 
 
@@ -432,7 +432,7 @@ If successful, there is no output. Once the command completes, the asset will co
 
 **_:point_right: NOTE:_**
 At the time of writing the Unity Asset Manager is still in beta. Only previously registered metadata field definitions can be used. Make sure you add those definitions to your Unity organization before
-attempting to assign values to them. 
+attempting to assign values to them.
 In the future we should be able to automatically register new metadata field definitions as needed.
 
 To see the effect of the above command, we can use the *asset get* command again and with the help of NuShell we can subselect the metadata from the output:
