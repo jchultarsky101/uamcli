@@ -19,9 +19,11 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
+<!--
+  <a href="https://github.com/jchultarsky101/uamcli">
     <img src="images/logo.png" alt="Logo" width="240" height="240">
   </a>
+-->
 
   <h3 align="center">UAM CLI</h3>
 
@@ -84,6 +86,12 @@ Here's why:
 * We like Unity and what they do :smile:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Change Log
+
+The current version is v0.1.0. It is a pre-release version. 
+
+[Changelog](/CHANGELOG.md)
 
 
 ### Built With
@@ -363,7 +371,7 @@ uamcli asset search
 
 UAMCLI works very well in combination with [NuShell](https://www.nushell.sh). Here is an example of the two working together:
 
-````nushell
+````
 uamcli asset search | from json | select identity.id identity.version name
 ````
 ````
@@ -435,7 +443,7 @@ In the future we should be able to automatically register new metadata field def
 
 To see the effect of the above command, we can use the *asset get* command again and with the help of NuShell we can subselect the metadata from the output:
 
-````nushell
+````
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from json | get metadata
 ````
 ````
@@ -448,7 +456,7 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from js
 
 You could save this into the same CSV file format with the header using NuShell:
 
-````nushell
+````
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from json | get metadata | columns | each {|c| [['Name', 'Value']; [$c, ($props | get $c)]]} | flatten | to csv | save data/metadata/metadata2.csv
 ````
 
