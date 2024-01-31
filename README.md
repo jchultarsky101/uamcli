@@ -490,7 +490,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Julian Chultarsky - [@jchultarsky101](https://twitter.com/jchultarsky101) - jchultarsky@physna.com
 
-Project Link: [https://github.com/jchultarsky101/uamcli](https://github.com/jchultarsky101/uamcli)
+Project Link: [https://jchultarsky101.github.io/uamcli](https://jchultarsky101.github.io/uamcli)
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
