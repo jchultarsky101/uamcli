@@ -449,14 +449,14 @@ uamcli asset search
 UAMCLI works very well in combination with [NuShell](https://www.nushell.sh). Here is an example of the two working together:
 
 ````
-uamcli asset search | from json | select identity.id identity.version name
+uamcli asset search | from json | select identity.id identity.version name status
 ````
 ````
-╭───┬──────────────────────────┬──────────────────┬───────╮
-│ # │       identity_id        │ identity_version │ name  │
-├───┼──────────────────────────┼──────────────────┼───────┤
-│ 0 │ 65a7d8646e7591cfd372ee51 │ 1                │ test1 │
-╰───┴──────────────────────────┴──────────────────┴───────╯
+╭───┬──────────────────────────┬──────────────────┬──────┬────────╮
+│ # │       identity_id        │ identity_version │ name │ status │
+├───┼──────────────────────────┼──────────────────┼──────┼────────┤
+│ 0 │ 65bc28415a24182705f5c90a │ 1                │ test │ Draft  │
+╰───┴──────────────────────────┴──────────────────┴──────┴────────╯
 ````
 
 In this case, we used UAMCLI to fetch the list of available assets and piped the output to NuShell to select only the fields that we are interested. With NuShell you can do further data manupulations, store the results to a file and execute other programs as needed.
