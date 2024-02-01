@@ -434,6 +434,34 @@ In the following example, we are only interested in the asset status and we use 
 uamcli asset get --asset-id 65bc28415a24182705f5c90a --asset-version 1 | jq '.status'
 ````
 
+### Downloading asset files
+
+To download all files that belong to an asset to your computer, you can use the *asset download* command:
+
+````bash
+uamcli help asset download
+````
+````
+Download all asset files
+
+Usage: uamcli asset download [OPTIONS] --asset-id <asset-id> --asset-version <asset-version>
+
+Options:
+      --asset-id <asset-id>            Asset ID
+      --asset-version <asset-version>  Asset version
+      --download-dir <download-dir>    Download directory path
+  -h, --help                           Print help
+  -V, --version                        Print version
+````
+
+It takes the following arguments:
+
+* --asset-id: the asset ID as explained earlier
+* --asset-version: the asset version as explained earlier
+* --download-dir: the path to you local target directory. They files will be stored there. If not specified, the files will be downloaded to the default download directory for your user
+
+The downloaded file names will be the same as they were uploaded to UAM.
+
 ### Listing the assets
 
 To list all available assets in our Unity project, we can use the ***asset search*** command:
