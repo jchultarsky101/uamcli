@@ -542,14 +542,14 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from js
 
 _The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch._
 
-- ✅ :white_check_mark: Add login/logoff functions
-- ✅ :white_check_mark: Implement basic asset operations (create, search, metadata)
-- ✅ :white_check_mark: Implement basic file operations (upload)
-- ✅ :white_check_mark: Add Changelog
+- :white_check_mark: Add login/logoff functions
+- :white_check_mark: Implement basic asset operations (create, search, metadata)
+- :white_check_mark: Implement basic file operations (upload)
+- :white_check_mark: Add Changelog
 - [ ] Test suite
-- ✅ :white_check_mark: CI/CD
+- :white_check_mark: CI/CD
 - [ ] Support for multiple organizations and projects
-- ✅ :white_check_mark: Create documentation
+- :white_check_mark: Create documentation
 
 See the [open issues](https://github.com/jchultarsky101/uamcli/issues) for a full list of proposed features (and known issues).
 
