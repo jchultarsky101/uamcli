@@ -5,7 +5,7 @@ use crate::{
     configuration::{Configuration, ConfigurationError},
     model::{AssetIdentity, AssetStatus},
 };
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use std::path::PathBuf;
 use thiserror::Error;
 
@@ -41,6 +41,7 @@ const PARAMETER_ASSET_ID: &str = "asset-id";
 const PARAMETER_ASSET_VERSION: &str = "asset-version";
 const PARAMETER_DATA_FILE: &str = "data";
 const PARAMETER_STATUS: &str = "status";
+const PARAMETER_PUBLISH: &str = "publish";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -199,6 +200,13 @@ impl Cli {
                                     .action(clap::ArgAction::Append)
                                     .help("File containing the 3D model data")
                                     .value_parser(clap::value_parser!(PathBuf)),
+                            )
+                            .arg(
+                                Arg::new(PARAMETER_PROJECT_ID)
+                                    .long(PARAMETER_PUBLISH)
+                                    .required(false)
+                                    .action(ArgAction::SetTrue)
+                                    .help("If present, the asset will be automatically published after creation")
                             ),
                     )
                     .subcommand(
@@ -328,12 +336,14 @@ impl Cli {
                         .unwrap();
                     let data_file_paths: Vec<&PathBuf> =
                         data_file_paths.into_iter().map(|p| p.into()).collect();
+                    let publish = sub_matches.get_flag(PARAMETER_PROJECT_ID);
 
                     let result = api
                         .create_asset(
                             name.to_owned(),
                             description.to_owned().map(|s| s.to_owned()),
                             data_file_paths,
+                            publish,
                         )
                         .await?;
                     let json = serde_json::to_string(&result).unwrap();

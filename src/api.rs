@@ -122,11 +122,22 @@ impl Api {
         name: String,
         description: Option<String>,
         data_files: Vec<&PathBuf>,
+        publish: bool,
     ) -> Result<AssetIdentity, ApiError> {
         self.init().await?;
         log::trace!("Creating asset {}...", name.to_owned());
         match &self.client {
-            Some(client) => Ok(client.create_asset(name, description, data_files).await?),
+            Some(client) => {
+                let id = client.create_asset(name, description, data_files).await?;
+
+                if publish {
+                    self.set_asset_status(&id, &AssetStatus::InReview).await?;
+                    self.set_asset_status(&id, &AssetStatus::Approved).await?;
+                    self.set_asset_status(&id, &AssetStatus::Published).await?;
+                }
+
+                Ok(id)
+            }
             None => Err(ApiError::ClientNotInitialized),
         }
     }
