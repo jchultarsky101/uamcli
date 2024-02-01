@@ -295,10 +295,12 @@ uamcli asset create --name test1 --data data/sample/test.stl --data data/sample/
 {"id":"65a7d8646e7591cfd372ee51","version":"1"}
 ````
 
-The output of the commands is usually JSON. The UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
-used as the input to another program.
+**_:point_right: NOTE:_**
+When using multiple *--data* arguments, we will upload multiple files under the one asset we create with name given. It will not create separate assets for each file.
 
-Using the above, you can easily develop a script to execute bulk data uploads. For example, using BASH, you can write the following to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.
+The output of the commands is usually JSON. UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
+used as the input to another program. You can easily develop a script to execute bulk data uploads. 
+For example, using BASH, you can write the following script to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.
 
 ````bash
 #!/bin/bash
@@ -332,6 +334,9 @@ else
 fi
 
 ````
+
+This is just one example. You can implement whatever business logic you need for your specific use cases.
+
 
 ### Updating the asset status
 
@@ -372,7 +377,8 @@ all necessary stages all the way to "Publish" for a newly created asset. It is h
 
 ### Reading asset data
 
-In the example above, the *id* is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
+In the example where we create a new asset above, the *id* in the output is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
+This will include the asset's status value.
 
 ````bash
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1
@@ -420,6 +426,12 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | jq
   ],
   "metadata": null
 }
+````
+
+In the following example, we are only interested in the asset status and we use ***jq*** to extract it from the output:
+
+````bash
+uamcli asset get --asset-id 65bc28415a24182705f5c90a --asset-version 1 | jq '.status'
 ````
 
 ### Listing the assets
