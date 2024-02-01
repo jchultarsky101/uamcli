@@ -490,6 +490,10 @@ uamcli asset search | from json | select identity.id identity.version name statu
 In this case, we used UAMCLI to fetch the list of available assets and piped the output to NuShell to select only the fields that we are interested. With NuShell you can do further data manupulations, store the results to a file and execute other programs as needed.
 It is a great tool to build custom scripts.
 
+
+**_:point_right: NOTE:_**
+The current version of UAMCLI does not implement search criteria. This is a feature we plan to implement later. At this time, the search command always returns the full list of assets in your project.
+
 ### Uploading metadata
 
 An asset contains files, but also can have metadata, which is a collection of key/value pairs that are used to describe the contents. For example, you may have a property named "Material" that indicates the type of material used
