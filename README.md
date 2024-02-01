@@ -282,6 +282,9 @@ The arguments we provided are as follows:
 * --data - the local path of the file we want to upload
 * --publish - (optional) if specified, this flag will cause the asset to be automatically set to "Published" status afer download
 
+**_:point_right: NOTE:_**
+See more about asset status values below related to the --publish argument.
+
 If you have more than one file, you can specify the --data argument multiple times as necessary:
 
 
@@ -292,10 +295,12 @@ uamcli asset create --name test1 --data data/sample/test.stl --data data/sample/
 {"id":"65a7d8646e7591cfd372ee51","version":"1"}
 ````
 
-The output of the commands is usually JSON. The UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
-used as the input to another program.
+**_:point_right: NOTE:_**
+When using multiple *--data* arguments, we will upload multiple files under the one asset we create with name given. It will not create separate assets for each file.
 
-Using the above, you can easily develop a script to execute bulk data uploads. For example, using BASH, you can write the following to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.
+The output of the commands is usually JSON. UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
+used as the input to another program. You can easily develop a script to execute bulk data uploads. 
+For example, using BASH, you can write the following script to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.
 
 ````bash
 #!/bin/bash
@@ -321,7 +326,7 @@ if [ -d "${DATA_PATH}" ]; then
     done
 else
     if [ -f "${DATA_PATH}" ]; then
-        echo "${DATA_PATH} is a file";
+        echo "${DATA_PATH} is a file"; f 
     else
         echo "${DATA_PATH} is not valid";
         exit 1
@@ -330,10 +335,50 @@ fi
 
 ````
 
+This is just one example. You can implement whatever business logic you need for your specific use cases.
+
+
+### Updating the asset status
+
+The Unity Asset Manager has a concept of asset workflow. When an asset is uploaded, the initial status assigned to the asset is "draft".
+The idea is for the asset to be reviewed and approved before it's status is set to "published". In some cases, the asset will not be visible
+to downstream systems unless it is published.
+
+The normal order of status values is:
+
+Draft -> InReview -> Approved -> Published
+
+An asset cannot be set directly to published unless the previous status is approved, etc.
+
+UAMCLI provides a command to set the status of an asset:
+
+````bash
+uamcli help asset status set
+Usage: uamcli asset status set --asset-id <asset-id> --asset-version <asset-version> --status <status>
+
+Options:
+      --asset-id <asset-id>            Asset ID
+      --asset-version <asset-version>  Asset version
+      --status <status>                Asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)
+  -h, --help                           Print help
+  -V, --version                        Print version
+````
+
+For example, to set the status of newly created asset to "Inreview", you can do the following:
+
+````bash
+uamcli asset status set --asset-id 65a7d8646e7591cfd372ee51 --version 1 --status inreview
+````
+
+This will update the status from "Draft" to "InReview" for the asset. 
+
+In the *create asset* command above we saw the *--publish* argument. This is simply a convenience feature to automatically update the status through
+all necessary stages all the way to "Publish" for a newly created asset. It is hepful when automating bulk uploads.
 
 ### Reading asset data
 
-In the example above, the *id* is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
+In the example where we create a new asset above, the *id* in the output is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
+This will include the asset's status value.
 
 ````bash
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1
@@ -383,6 +428,40 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | jq
 }
 ````
 
+In the following example, we are only interested in the asset status and we use ***jq*** to extract it from the output:
+
+````bash
+uamcli asset get --asset-id 65bc28415a24182705f5c90a --asset-version 1 | jq '.status'
+````
+
+### Downloading asset files
+
+To download all files that belong to an asset to your computer, you can use the *asset download* command:
+
+````bash
+uamcli help asset download
+````
+````
+Download all asset files
+
+Usage: uamcli asset download [OPTIONS] --asset-id <asset-id> --asset-version <asset-version>
+
+Options:
+      --asset-id <asset-id>            Asset ID
+      --asset-version <asset-version>  Asset version
+      --download-dir <download-dir>    Download directory path
+  -h, --help                           Print help
+  -V, --version                        Print version
+````
+
+It takes the following arguments:
+
+* --asset-id: the asset ID as explained earlier
+* --asset-version: the asset version as explained earlier
+* --download-dir: the path to you local target directory. The files will be stored there. If not specified, the files will be downloaded to the default download directory for your user
+
+The downloaded file names will be the same as they were uploaded to UAM.
+
 ### Listing the assets
 
 To list all available assets in our Unity project, we can use the ***asset search*** command:
@@ -398,18 +477,22 @@ uamcli asset search
 UAMCLI works very well in combination with [NuShell](https://www.nushell.sh). Here is an example of the two working together:
 
 ````
-uamcli asset search | from json | select identity.id identity.version name
+uamcli asset search | from json | select identity.id identity.version name status
 ````
 ````
-╭───┬──────────────────────────┬──────────────────┬───────╮
-│ # │       identity_id        │ identity_version │ name  │
-├───┼──────────────────────────┼──────────────────┼───────┤
-│ 0 │ 65a7d8646e7591cfd372ee51 │ 1                │ test1 │
-╰───┴──────────────────────────┴──────────────────┴───────╯
+╭───┬──────────────────────────┬──────────────────┬──────┬────────╮
+│ # │       identity_id        │ identity_version │ name │ status │
+├───┼──────────────────────────┼──────────────────┼──────┼────────┤
+│ 0 │ 65bc28415a24182705f5c90a │ 1                │ test │ Draft  │
+╰───┴──────────────────────────┴──────────────────┴──────┴────────╯
 ````
 
 In this case, we used UAMCLI to fetch the list of available assets and piped the output to NuShell to select only the fields that we are interested. With NuShell you can do further data manupulations, store the results to a file and execute other programs as needed.
 It is a great tool to build custom scripts.
+
+
+**_:point_right: NOTE:_**
+The current version of UAMCLI does not implement search criteria. This is a feature we plan to implement later. At this time, the search command always returns the full list of assets in your project.
 
 ### Uploading metadata
 
@@ -491,14 +574,15 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from js
 
 _The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch._
 
-- [x] Add login/logoff functions
-- [x] Implement basic asset operations (create, search, metadata)
-- [x] Implement basic file operations (upload)
-- [ ] Add Changelog
-- [ ] Test suite
-- [ ] CI/CD
-- [ ] Support for multiple organizations and projects
-- [ ] Create documentation via Github Pages
+- :white_check_mark: Add login/logoff functions
+- :white_check_mark: Implement basic asset operations (create, search, metadata)
+- :white_check_mark: Implement basic file operations (upload)
+- :white_check_mark: Add Changelog
+- :white_check_mark: CI/CD
+- :white_check_mark: Create documentation
+- Better error messages
+- Test suite
+- Support for multiple organizations and projects
 
 See the [open issues](https://github.com/jchultarsky101/uamcli/issues) for a full list of proposed features (and known issues).
 
