@@ -458,7 +458,7 @@ It takes the following arguments:
 
 * --asset-id: the asset ID as explained earlier
 * --asset-version: the asset version as explained earlier
-* --download-dir: the path to you local target directory. They files will be stored there. If not specified, the files will be downloaded to the default download directory for your user
+* --download-dir: the path to you local target directory. The files will be stored there. If not specified, the files will be downloaded to the default download directory for your user
 
 The downloaded file names will be the same as they were uploaded to UAM.
 
