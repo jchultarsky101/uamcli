@@ -235,7 +235,7 @@
     <a href="https://jchultarsky101.github.io/uamcli/" rel="noopener noreferrer"><strong>Explore the docs »</strong></a>
     <br>
     <br>
-    <a href="https://github.com/jchultarsky101/uamcli" rel="noopener noreferrer">View Demo</a>
+    <a href="https://github.com/jchultarsky101/uamcli/tree/main/images" rel="noopener noreferrer">View Demo</a>
     ·
     <a href="https://github.com/jchultarsky101/uamcli/issues" rel="noopener noreferrer">Report Bug</a>
     ·
@@ -279,19 +279,19 @@ designed for interfacing with the Asset Manager. Unity also provides useful SDKs
 <li>There is no SDK (as of end of 2023) for Rust</li>
 <li>We like Unity and what they do :smile:</li>
 </ul>
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
 <h3>Built With</h3>
 <p>This project is built with the wonderful programming language <a href="https://www.rust-lang.org" rel="noopener noreferrer">Rust</a>.</p>
 <p><a href="https://www.rust-lang.org/" rel="noopener noreferrer"><img src="http://rust-lang.org/logos/rust-logo-128x128.png" alt="Rust"></a></p>
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
 
 <h2>Getting Started</h2>
-<p>Currently the only way to install UAMCLI is to compile it from source code. Clone this repository on your computer, navigate to the project root and compile with Rust:</p>
+<h3>Downloading a pre-compiled binary</h3>
+<p>You can download a pre-compiled binary for your platform from the <a href="https://jchultarsky101.github.io/uamcli" rel="noopener noreferrer">documentation site</a>. You will have uncompress it and copy the file to location of your choice.</p>
+<h3>Compilation from source</h3>
+<p>You would need to have Rust installed on your computer to use this method. Clone this repository on your computer, navigate to the project root and compile with Rust:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">cargo build
 </span></pre>
 
 <p>This will produce an executable for your operating system.</p>
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
 
 <h2>Usage</h2>
 <p>UAMCLI is a command line utility program. You execute it in the terminal.</p>
@@ -434,6 +434,7 @@ with it's <em>create</em> subcommand.</p>
 <ul>
 <li>--name - this is the desired name of the new asset as it would appear in the Unity's Asset Manager</li>
 <li>--data - the local path of the file we want to upload</li>
+<li>--publish - (optional) if specified, this flag will cause the asset to be automatically set to "Published" status afer download</li>
 </ul>
 <p>If you have more than one file, you can specify the --data argument multiple times as necessary:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli asset create</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">name</span><span style="color:#82aaff;"> test1</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">data</span><span style="color:#82aaff;"> data/sample/test.stl</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">data</span><span style="color:#82aaff;"> data/sample/test2.stl
@@ -444,6 +445,39 @@ with it's <em>create</em> subcommand.</p>
 
 <p>The output of the commands is usually JSON. The UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
 used as the input to another program.</p>
+<p>Using the above, you can easily develop a script to execute bulk data uploads. For example, using BASH, you can write the following to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.</p>
+<pre style="background-color:#263238;"><span style="font-style:italic;color:#546e7a;">#!/bin/bash
+</span><span style="color:#eeffff;">
+</span><span style="font-style:italic;color:#546e7a;"># check if the argument was supplied
+</span><span style="font-style:italic;color:#c792ea;">if </span><span style="color:#82aaff;">[[ </span><span style="color:#89ddff;">$</span><span style="font-style:italic;color:#ff5370;"># </span><span style="color:#89ddff;">-</span><span style="color:#f78c6c;">eq</span><span style="color:#82aaff;"> 0 ]]</span><span style="color:#89ddff;">; </span><span style="font-style:italic;color:#c792ea;">then
+</span><span style="color:#eeffff;">    </span><span style="color:#82aaff;">echo </span><span style="color:#89ddff;">'</span><span style="color:#c3e88d;">You must supply a path to the data directory as an argument.</span><span style="color:#89ddff;">'
+</span><span style="color:#eeffff;">    </span><span style="color:#82aaff;">exit 1
+</span><span style="font-style:italic;color:#c792ea;">fi
+</span><span style="color:#eeffff;">
+</span><span style="font-style:italic;color:#546e7a;"># the only argument to this script is a path to a data directory
+</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">=$</span><span style="color:#eeffff;">1
+</span><span style="color:#eeffff;">
+</span><span style="font-style:italic;color:#546e7a;"># check if the path is a directory
+</span><span style="font-style:italic;color:#c792ea;">if </span><span style="color:#82aaff;">[ </span><span style="color:#89ddff;">-</span><span style="color:#f78c6c;">d </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}" </span><span style="color:#82aaff;">]</span><span style="color:#89ddff;">; </span><span style="font-style:italic;color:#c792ea;">then
+</span><span style="color:#eeffff;">    </span><span style="color:#82aaff;">echo </span><span style="color:#89ddff;">"</span><span style="color:#c3e88d;">Uploading files in </span><span style="color:#89ddff;">${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}</span><span style="color:#c3e88d;">...</span><span style="color:#89ddff;">";
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">    </span><span style="font-style:italic;color:#c792ea;">for</span><span style="color:#eeffff;"> FILENAME </span><span style="font-style:italic;color:#c792ea;">in </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}"</span><span style="color:#eeffff;">/</span><span style="color:#89ddff;">*; </span><span style="font-style:italic;color:#c792ea;">do
+</span><span style="color:#eeffff;">        ASSET_NAME</span><span style="color:#89ddff;">="${</span><span style="color:#eeffff;">FILENAME</span><span style="color:#89ddff;">##*</span><span style="color:#c3e88d;">/</span><span style="color:#89ddff;">}" </span><span style="font-style:italic;color:#546e7a;"># Extracts filename with extension
+</span><span style="color:#eeffff;">        ASSET_NAME</span><span style="color:#89ddff;">="${</span><span style="color:#eeffff;">ASSET_NAME</span><span style="color:#89ddff;">%</span><span style="color:#c3e88d;">.</span><span style="color:#89ddff;">*}" </span><span style="font-style:italic;color:#546e7a;"># Removes extension
+</span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">uamcli asset create</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">name </span><span style="color:#89ddff;">"$</span><span style="color:#eeffff;">ASSET_NAME</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">data </span><span style="color:#89ddff;">"$</span><span style="color:#eeffff;">FILENAME</span><span style="color:#89ddff;">" --</span><span style="color:#f78c6c;">publish
+</span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">echo </span><span style="color:#89ddff;">"$</span><span style="color:#eeffff;">FILENAME</span><span style="color:#c3e88d;"> uploaded.</span><span style="color:#89ddff;">"
+</span><span style="color:#eeffff;">    </span><span style="font-style:italic;color:#c792ea;">done
+</span><span style="font-style:italic;color:#c792ea;">else
+</span><span style="color:#eeffff;">    </span><span style="font-style:italic;color:#c792ea;">if </span><span style="color:#82aaff;">[ </span><span style="color:#89ddff;">-</span><span style="color:#f78c6c;">f </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}" </span><span style="color:#82aaff;">]</span><span style="color:#89ddff;">; </span><span style="font-style:italic;color:#c792ea;">then
+</span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">echo </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}</span><span style="color:#c3e88d;"> is a file</span><span style="color:#89ddff;">";
+</span><span style="color:#eeffff;">    </span><span style="font-style:italic;color:#c792ea;">else
+</span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">echo </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}</span><span style="color:#c3e88d;"> is not valid</span><span style="color:#89ddff;">";
+</span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">exit 1
+</span><span style="color:#eeffff;">    </span><span style="font-style:italic;color:#c792ea;">fi
+</span><span style="font-style:italic;color:#c792ea;">fi
+</span><span style="color:#eeffff;">
+</span></pre>
+
 <h3>Reading asset data</h3>
 <p>In the example above, the <em>id</em> is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli asset get</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">asset-id</span><span style="color:#82aaff;"> 65a7d8646e7591cfd372ee51</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">asset-version</span><span style="color:#82aaff;"> 1
@@ -573,7 +607,6 @@ In the future we should be able to automatically register new metadata field def
 <pre style="background-color:#263238;"><span style="color:#eeffff;">uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from json | get metadata | columns | each {|c| [['Name', 'Value']; [$c, ($props | get $c)]]} | flatten | to csv | save data/metadata/metadata2.csv
 </span></pre>
 
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
 
 <h2>Roadmap</h2>
 <p><em>The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch.</em></p>
@@ -588,7 +621,6 @@ In the future we should be able to automatically register new metadata field def
 <li> Create documentation via Github Pages</li>
 </ul>
 <p>See the <a href="https://github.com/jchultarsky101/uamcli/issues" rel="noopener noreferrer">open issues</a> for a full list of proposed features (and known issues).</p>
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
 
 <h2>Contributing</h2>
 <p>Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are <strong>greatly appreciated</strong>.</p>
@@ -601,19 +633,15 @@ Don't forget to give the project a star! Thanks again!</p>
 <li>Push to the Branch (<code>git push origin feature/AmazingFeature</code>)</li>
 <li>Open a Pull Request</li>
 </ol>
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
 
 <h2>License</h2>
 <p>Distributed under the MIT License. See <code>LICENSE.txt</code> for more information.</p>
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
 
 <h2>Contact</h2>
 <p>Julian Chultarsky - <a href="https://twitter.com/jchultarsky101" rel="noopener noreferrer">@jchultarsky101</a> - <a href="mailto:jchultarsky@physna.com" rel="noopener noreferrer">jchultarsky@physna.com</a></p>
-<p>Project Link: <a href="https://github.com/jchultarsky101/uamcli" rel="noopener noreferrer">https://github.com/jchultarsky101/uamcli</a></p>
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
+<p>Project Link: <a href="https://jchultarsky101.github.io/uamcli" rel="noopener noreferrer">https://jchultarsky101.github.io/uamcli</a></p>
 
 <h2>Acknowledgments</h2>
-<p>Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!</p>
 <ul>
 <li><a href="https://choosealicense.com" rel="noopener noreferrer">Choose an Open Source License</a></li>
 <li><a href="https://www.webpagefx.com/tools/emoji-cheat-sheet" rel="noopener noreferrer">GitHub Emoji Cheat Sheet</a></li>
@@ -628,7 +656,6 @@ Don't forget to give the project a star! Thanks again!</p>
 <li><a href="https://crates.io/crates/keyring" rel="noopener noreferrer">Keyring</a></li>
 <li><a href="https://crates.io/crates/log" rel="noopener noreferrer">Log</a></li>
 </ul>
-<p>(<a href="#readme-top" rel="noopener noreferrer">back to top</a>)</p>
 
 
 
