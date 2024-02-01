@@ -548,6 +548,7 @@ _The project is work in progress. No release has been provided as of yet. Most o
 - :white_check_mark: Add Changelog
 - :white_check_mark: CI/CD
 - :white_check_mark: Create documentation
+- Better error messages
 - Test suite
 - Support for multiple organizations and projects
 
