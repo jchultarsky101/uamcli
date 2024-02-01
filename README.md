@@ -282,6 +282,9 @@ The arguments we provided are as follows:
 * --data - the local path of the file we want to upload
 * --publish - (optional) if specified, this flag will cause the asset to be automatically set to "Published" status afer download
 
+**_:point_right: NOTE:_**
+See more about asset status values below related to the --publish argument.
+
 If you have more than one file, you can specify the --data argument multiple times as necessary:
 
 
@@ -321,7 +324,7 @@ if [ -d "${DATA_PATH}" ]; then
     done
 else
     if [ -f "${DATA_PATH}" ]; then
-        echo "${DATA_PATH} is a file";
+        echo "${DATA_PATH} is a file"; f 
     else
         echo "${DATA_PATH} is not valid";
         exit 1
@@ -330,6 +333,42 @@ fi
 
 ````
 
+### Updating the asset status
+
+The Unity Asset Manager has a concept of asset workflow. When an asset is uploaded, the initial status assigned to the asset is "draft".
+The idea is for the asset to be reviewed and approved before it's status is set to "published". In some cases, the asset will not be visible
+to downstream systems unless it is published.
+
+The normal order of status values is:
+
+Draft -> InReview -> Approved -> Published
+
+An asset cannot be set directly to published unless the previous status is approved, etc.
+
+UAMCLI provides a command to set the status of an asset:
+
+````bash
+uamcli help asset status set
+Usage: uamcli asset status set --asset-id <asset-id> --asset-version <asset-version> --status <status>
+
+Options:
+      --asset-id <asset-id>            Asset ID
+      --asset-version <asset-version>  Asset version
+      --status <status>                Asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn)
+  -h, --help                           Print help
+  -V, --version                        Print version
+````
+
+For example, to set the status of newly created asset to "Inreview", you can do the following:
+
+````bash
+uamcli asset status set --asset-id 65a7d8646e7591cfd372ee51 --version 1 --status inreview
+````
+
+This will update the status from "Draft" to "InReview" for the asset. 
+
+In the *create asset* command above we saw the *--publish* argument. This is simply a convenience feature to automatically update the status through
+all necessary stages all the way to "Publish" for a newly created asset. It is hepful when automating bulk uploads.
 
 ### Reading asset data
 
