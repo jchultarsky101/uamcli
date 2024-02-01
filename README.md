@@ -280,6 +280,7 @@ The arguments we provided are as follows:
 
 * --name - this is the desired name of the new asset as it would appear in the Unity's Asset Manager
 * --data - the local path of the file we want to upload
+* --publish - (optional) if specified, this flag will cause the asset to be automatically set to "Published" status afer download
 
 If you have more than one file, you can specify the --data argument multiple times as necessary:
 
@@ -293,6 +294,41 @@ uamcli asset create --name test1 --data data/sample/test.stl --data data/sample/
 
 The output of the commands is usually JSON. The UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
 used as the input to another program.
+
+Using the above, you can easily develop a script to execute bulk data uploads. For example, using BASH, you can write the following to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.
+
+````bash
+#!/bin/bash
+
+# check if the argument was supplied
+if [[ $# -eq 0 ]]; then
+    echo 'You must supply a path to the data directory as an argument.'
+    exit 1
+fi
+
+# the only argument to this script is a path to a data directory
+DATA_PATH=$1
+
+# check if the path is a directory
+if [ -d "${DATA_PATH}" ]; then
+    echo "Uploading files in ${DATA_PATH}...";
+
+    for FILENAME in "${DATA_PATH}"/*; do
+        ASSET_NAME="${FILENAME##*/}" # Extracts filename with extension
+        ASSET_NAME="${ASSET_NAME%.*}" # Removes extension
+        uamcli asset create --name "$ASSET_NAME" --data "$FILENAME" --publish
+        echo "$FILENAME uploaded."
+    done
+else
+    if [ -f "${DATA_PATH}" ]; then
+        echo "${DATA_PATH} is a file";
+    else
+        echo "${DATA_PATH} is not valid";
+        exit 1
+    fi
+fi
+
+````
 
 
 ### Reading asset data
