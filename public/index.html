@@ -450,6 +450,7 @@ When using multiple <em>--data</em> arguments, we will upload multiple files und
 <p>The output of the commands is usually JSON. UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
 used as the input to another program. You can easily develop a script to execute bulk data uploads.
 For example, using BASH, you can write the following script to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.</p>
+
 <pre style="background-color:#263238;"><span style="font-style:italic;color:#546e7a;">#!/bin/bash
 </span><span style="color:#eeffff;">
 </span><span style="font-style:italic;color:#546e7a;"># check if the argument was supplied
@@ -509,6 +510,7 @@ to downstream systems unless it is published.</p>
 <p>This will update the status from "Draft" to "InReview" for the asset.</p>
 <p>In the <em>create asset</em> command above we saw the <em>--publish</em> argument. This is simply a convenience feature to automatically update the status through
 all necessary stages all the way to "Publish" for a newly created asset. It is hepful when automating bulk uploads.</p>
+
 <h3>Reading asset data</h3>
 <p>In the example where we create a new asset above, the <em>id</em> in the output is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
 This will include the asset's status value.</p>
