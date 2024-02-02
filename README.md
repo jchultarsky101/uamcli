@@ -282,7 +282,7 @@ The arguments we provided are as follows:
 * --data - the local path of the file we want to upload
 * --publish - (optional) if specified, this flag will cause the asset to be automatically set to "Published" status afer download
 
-**_:point_right: NOTE:_**
+**_👉 NOTE:_**
 See more about asset status values below related to the --publish argument.
 
 If you have more than one file, you can specify the --data argument multiple times as necessary:
@@ -295,7 +295,7 @@ uamcli asset create --name test1 --data data/sample/test.stl --data data/sample/
 {"id":"65a7d8646e7591cfd372ee51","version":"1"}
 ````
 
-**_:point_right: NOTE:_**
+**_👉 NOTE:_**
 When using multiple *--data* arguments, we will upload multiple files under the one asset we create with name given. It will not create separate assets for each file.
 
 The output of the commands is usually JSON. UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
@@ -491,7 +491,7 @@ In this case, we used UAMCLI to fetch the list of available assets and piped the
 It is a great tool to build custom scripts.
 
 
-**_:point_right: NOTE:_**
+**_👉 NOTE:_**
 The current version of UAMCLI does not implement search criteria. This is a feature we plan to implement later. At this time, the search command always returns the full list of assets in your project.
 
 ### Uploading metadata
@@ -545,7 +545,7 @@ uamcli asset metadata upload --asset-id 65a7d8646e7591cfd372ee51 --asset-version
 
 If successful, there is no output. Once the command completes, the asset will contain the three metadata properties with their respective values.
 
-**_:point_right: NOTE:_**
+**_👉 NOTE:_**
 At the time of writing the Unity Asset Manager is still in beta. Only previously registered metadata field definitions can be used. Make sure you add those definitions to your Unity organization before
 attempting to assign values to them.
 In the future we should be able to automatically register new metadata field definitions as needed.
@@ -574,12 +574,12 @@ uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from js
 
 _The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch._
 
-- :white_check_mark: Add login/logoff functions
-- :white_check_mark: Implement basic asset operations (create, search, metadata)
-- :white_check_mark: Implement basic file operations (upload)
-- :white_check_mark: Add Changelog
-- :white_check_mark: CI/CD
-- :white_check_mark: Create documentation
+- ✅ Add login/logoff functions
+- ✅Implement basic asset operations (create, search, metadata)
+- ✅Implement basic file operations (upload)
+- ✅Add Changelog
+- ✅CI/CD
+- ✅Create documentation
 - Better error messages
 - Test suite
 - Support for multiple organizations and projects
