@@ -94,11 +94,17 @@ pub struct Dataset {
     id: String,
     #[serde(rename = "name")]
     name: String,
+    #[serde(rename = "primaryType")]
+    primary_type: Option<String>,
 }
 
 impl Dataset {
-    pub fn new(id: String, name: String) -> Self {
-        Self { id, name }
+    pub fn new(id: String, name: String, primary_type: Option<String>) -> Self {
+        Self {
+            id,
+            name,
+            primary_type,
+        }
     }
 
     pub fn id(&self) -> String {
@@ -115,6 +121,22 @@ impl Dataset {
 
     pub fn set_name(&mut self, name: String) {
         self.name = name.to_owned();
+    }
+
+    pub fn set_primary_type(&mut self, primary_type: Option<String>) {
+        self.primary_type = primary_type.to_owned();
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct ThumbnailGenerationRequest {
+    #[serde(rename = "inputFiles")]
+    input_files: Vec<String>,
+}
+
+impl ThumbnailGenerationRequest {
+    pub fn new(input_files: Vec<String>) -> Self {
+        Self { input_files }
     }
 }
 
