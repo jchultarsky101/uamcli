@@ -67,11 +67,11 @@
 
 
 
-<div class="artifacts" data-tag="v0.1.3">
+<div class="artifacts" data-tag="v0.1.4">
   <div class="artifact-header target">
-    <h4>Install v0.1.3</h4>
+    <h4>Install v0.1.4</h4>
     
-      <div><small class="published-date">Published on Jan 31 2024 at 17:09 UTC</small></div>
+      <div><small class="published-date">Published on Feb  1 2024 at 22:11 UTC</small></div>
     
 
     <ul class="arches">
@@ -88,7 +88,7 @@
                 
                   
                   <div class="download-wrapper">
-                    <a href="https://github.com/jchultarsky101/uamcli/releases/download/v0.1.3/uamcli-aarch64-apple-darwin.tar.xz">
+                    <a href="https://github.com/jchultarsky101/uamcli/releases/download/v0.1.4/uamcli-aarch64-apple-darwin.tar.xz">
                       <button class="button primary">
                         <span>Download</span>
                         <span class="button-subtitle">uamcli-aarch64-apple-darwin.tar.xz</span>
@@ -113,7 +113,7 @@
                 
                   
                   <div class="download-wrapper">
-                    <a href="https://github.com/jchultarsky101/uamcli/releases/download/v0.1.3/uamcli-x86_64-apple-darwin.tar.xz">
+                    <a href="https://github.com/jchultarsky101/uamcli/releases/download/v0.1.4/uamcli-x86_64-apple-darwin.tar.xz">
                       <button class="button primary">
                         <span>Download</span>
                         <span class="button-subtitle">uamcli-x86_64-apple-darwin.tar.xz</span>
@@ -138,7 +138,7 @@
                 
                   
                   <div class="download-wrapper">
-                    <a href="https://github.com/jchultarsky101/uamcli/releases/download/v0.1.3/uamcli-x86_64-pc-windows-msvc.zip">
+                    <a href="https://github.com/jchultarsky101/uamcli/releases/download/v0.1.4/uamcli-x86_64-pc-windows-msvc.zip">
                       <button class="button primary">
                         <span>Download</span>
                         <span class="button-subtitle">uamcli-x86_64-pc-windows-msvc.zip</span>
@@ -163,7 +163,7 @@
                 
                   
                   <div class="download-wrapper">
-                    <a href="https://github.com/jchultarsky101/uamcli/releases/download/v0.1.3/uamcli-x86_64-unknown-linux-gnu.tar.xz">
+                    <a href="https://github.com/jchultarsky101/uamcli/releases/download/v0.1.4/uamcli-x86_64-unknown-linux-gnu.tar.xz">
                       <button class="button primary">
                         <span>Download</span>
                         <span class="button-subtitle">uamcli-x86_64-unknown-linux-gnu.tar.xz</span>
@@ -436,6 +436,8 @@ with it's <em>create</em> subcommand.</p>
 <li>--data - the local path of the file we want to upload</li>
 <li>--publish - (optional) if specified, this flag will cause the asset to be automatically set to "Published" status afer download</li>
 </ul>
+<p><strong><em>:point_right: NOTE:</em></strong>
+See more about asset status values below related to the --publish argument.</p>
 <p>If you have more than one file, you can specify the --data argument multiple times as necessary:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli asset create</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">name</span><span style="color:#82aaff;"> test1</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">data</span><span style="color:#82aaff;"> data/sample/test.stl</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">data</span><span style="color:#82aaff;"> data/sample/test2.stl
 </span></pre>
@@ -443,9 +445,12 @@ with it's <em>create</em> subcommand.</p>
 <pre style="background-color:#263238;"><span style="color:#eeffff;">{"id":"65a7d8646e7591cfd372ee51","version":"1"}
 </span></pre>
 
-<p>The output of the commands is usually JSON. The UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
-used as the input to another program.</p>
-<p>Using the above, you can easily develop a script to execute bulk data uploads. For example, using BASH, you can write the following to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.</p>
+<p><strong><em>:point_right: NOTE:</em></strong>
+When using multiple <em>--data</em> arguments, we will upload multiple files under the one asset we create with name given. It will not create separate assets for each file.</p>
+<p>The output of the commands is usually JSON. UAMCLI is designed to be used together with other tools and perhaps your own custom scripts. The output from UAMCLI is meant to be
+used as the input to another program. You can easily develop a script to execute bulk data uploads.
+For example, using BASH, you can write the following script to upload each file in a directory as a separate asset and automatically publish it. Do not forget to make your script executable on your platform.</p>
+
 <pre style="background-color:#263238;"><span style="font-style:italic;color:#546e7a;">#!/bin/bash
 </span><span style="color:#eeffff;">
 </span><span style="font-style:italic;color:#546e7a;"># check if the argument was supplied
@@ -469,7 +474,7 @@ used as the input to another program.</p>
 </span><span style="color:#eeffff;">    </span><span style="font-style:italic;color:#c792ea;">done
 </span><span style="font-style:italic;color:#c792ea;">else
 </span><span style="color:#eeffff;">    </span><span style="font-style:italic;color:#c792ea;">if </span><span style="color:#82aaff;">[ </span><span style="color:#89ddff;">-</span><span style="color:#f78c6c;">f </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}" </span><span style="color:#82aaff;">]</span><span style="color:#89ddff;">; </span><span style="font-style:italic;color:#c792ea;">then
-</span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">echo </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}</span><span style="color:#c3e88d;"> is a file</span><span style="color:#89ddff;">";
+</span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">echo </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}</span><span style="color:#c3e88d;"> is a file</span><span style="color:#89ddff;">"; </span><span style="color:#82aaff;">f 
 </span><span style="color:#eeffff;">    </span><span style="font-style:italic;color:#c792ea;">else
 </span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">echo </span><span style="color:#89ddff;">"${</span><span style="color:#eeffff;">DATA_PATH</span><span style="color:#89ddff;">}</span><span style="color:#c3e88d;"> is not valid</span><span style="color:#89ddff;">";
 </span><span style="color:#eeffff;">        </span><span style="color:#82aaff;">exit 1
@@ -478,8 +483,37 @@ used as the input to another program.</p>
 </span><span style="color:#eeffff;">
 </span></pre>
 
+<p>This is just one example. You can implement whatever business logic you need for your specific use cases.</p>
+<h3>Updating the asset status</h3>
+<p>The Unity Asset Manager has a concept of asset workflow. When an asset is uploaded, the initial status assigned to the asset is "draft".
+The idea is for the asset to be reviewed and approved before it's status is set to "published". In some cases, the asset will not be visible
+to downstream systems unless it is published.</p>
+<p>The normal order of status values is:</p>
+<p>Draft -&gt; InReview -&gt; Approved -&gt; Published</p>
+<p>An asset cannot be set directly to published unless the previous status is approved, etc.</p>
+<p>UAMCLI provides a command to set the status of an asset:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli help asset status set
+</span><span style="color:#82aaff;">Usage: uamcli asset status set</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">asset-id </span><span style="color:#89ddff;">&lt;</span><span style="color:#82aaff;">asset-id</span><span style="color:#89ddff;">&gt; -</span><span style="color:#82aaff;">-asset-version </span><span style="color:#89ddff;">&lt;</span><span style="color:#82aaff;">asset-version</span><span style="color:#89ddff;">&gt; -</span><span style="color:#82aaff;">-status </span><span style="color:#89ddff;">&lt;</span><span style="color:#82aaff;">status</span><span style="color:#89ddff;">&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#82aaff;">Options:
+</span><span style="color:#eeffff;">      </span><span style="color:#82aaff;">--asset-id </span><span style="color:#89ddff;">&lt;</span><span style="color:#82aaff;">asset-id</span><span style="color:#89ddff;">&gt;</span><span style="color:#82aaff;">            Asset ID
+</span><span style="color:#eeffff;">      </span><span style="color:#82aaff;">--asset-version </span><span style="color:#89ddff;">&lt;</span><span style="color:#82aaff;">asset-version</span><span style="color:#89ddff;">&gt;</span><span style="color:#82aaff;">  Asset version
+</span><span style="color:#eeffff;">      </span><span style="color:#82aaff;">--status </span><span style="color:#89ddff;">&lt;</span><span style="color:#82aaff;">status</span><span style="color:#89ddff;">&gt;</span><span style="color:#82aaff;">                Asset status value (e.g. draft, inreview, approved, published, rejected, withdrawn</span><span style="color:#eeffff;">)
+</span><span style="color:#eeffff;">  </span><span style="color:#82aaff;">-h,</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">help</span><span style="color:#82aaff;">                           Print help
+</span><span style="color:#eeffff;">  </span><span style="color:#82aaff;">-V,</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">version</span><span style="color:#82aaff;">                        Print version
+</span></pre>
+
+<p>For example, to set the status of newly created asset to "Inreview", you can do the following:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli asset status set</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">asset-id</span><span style="color:#82aaff;"> 65a7d8646e7591cfd372ee51</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">version</span><span style="color:#82aaff;"> 1</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">status</span><span style="color:#82aaff;"> inreview
+</span></pre>
+
+<p>This will update the status from "Draft" to "InReview" for the asset.</p>
+<p>In the <em>create asset</em> command above we saw the <em>--publish</em> argument. This is simply a convenience feature to automatically update the status through
+all necessary stages all the way to "Publish" for a newly created asset. It is hepful when automating bulk uploads.</p>
+
 <h3>Reading asset data</h3>
-<p>In the example above, the <em>id</em> is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.</p>
+<p>In the example where we create a new asset above, the <em>id</em> in the output is the asset ID as recorded in UAM. You can use that ID and the version number to read back the asset data.
+This will include the asset's status value.</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli asset get</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">asset-id</span><span style="color:#82aaff;"> 65a7d8646e7591cfd372ee51</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">asset-version</span><span style="color:#82aaff;"> 1
 </span></pre>
 
@@ -525,6 +559,34 @@ used as the input to another program.</p>
 </span><span style="color:#eeffff;">}
 </span></pre>
 
+<p>In the following example, we are only interested in the asset status and we use <em><strong>jq</strong></em> to extract it from the output:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli asset get</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">asset-id</span><span style="color:#82aaff;"> 65bc28415a24182705f5c90a</span><span style="color:#89ddff;"> --</span><span style="color:#f78c6c;">asset-version</span><span style="color:#82aaff;"> 1 </span><span style="color:#89ddff;">| </span><span style="color:#82aaff;">jq </span><span style="color:#89ddff;">'</span><span style="color:#c3e88d;">.status</span><span style="color:#89ddff;">'
+</span></pre>
+
+<h3>Downloading asset files</h3>
+<p>To download all files that belong to an asset to your computer, you can use the <em>asset download</em> command:</p>
+<pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli help asset download
+</span></pre>
+
+<pre style="background-color:#263238;"><span style="color:#eeffff;">Download all asset files
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Usage: uamcli asset download [OPTIONS] --asset-id &lt;asset-id&gt; --asset-version &lt;asset-version&gt;
+</span><span style="color:#eeffff;">
+</span><span style="color:#eeffff;">Options:
+</span><span style="color:#eeffff;">      --asset-id &lt;asset-id&gt;            Asset ID
+</span><span style="color:#eeffff;">      --asset-version &lt;asset-version&gt;  Asset version
+</span><span style="color:#eeffff;">      --download-dir &lt;download-dir&gt;    Download directory path
+</span><span style="color:#eeffff;">  -h, --help                           Print help
+</span><span style="color:#eeffff;">  -V, --version                        Print version
+</span></pre>
+
+<p>It takes the following arguments:</p>
+<ul>
+<li>--asset-id: the asset ID as explained earlier</li>
+<li>--asset-version: the asset version as explained earlier</li>
+<li>--download-dir: the path to you local target directory. The files will be stored there. If not specified, the files will be downloaded to the default download directory for your user</li>
+</ul>
+<p>The downloaded file names will be the same as they were uploaded to UAM.</p>
 <h3>Listing the assets</h3>
 <p>To list all available assets in our Unity project, we can use the <em><strong>asset search</strong></em> command:</p>
 <pre style="background-color:#263238;"><span style="color:#82aaff;">uamcli asset search
@@ -535,18 +597,20 @@ used as the input to another program.</p>
 </span></pre>
 
 <p>UAMCLI works very well in combination with <a href="https://www.nushell.sh" rel="noopener noreferrer">NuShell</a>. Here is an example of the two working together:</p>
-<pre style="background-color:#263238;"><span style="color:#eeffff;">uamcli asset search | from json | select identity.id identity.version name
+<pre style="background-color:#263238;"><span style="color:#eeffff;">uamcli asset search | from json | select identity.id identity.version name status
 </span></pre>
 
-<pre style="background-color:#263238;"><span style="color:#eeffff;">╭───┬──────────────────────────┬──────────────────┬───────╮
-</span><span style="color:#eeffff;">│ # │       identity_id        │ identity_version │ name  │
-</span><span style="color:#eeffff;">├───┼──────────────────────────┼──────────────────┼───────┤
-</span><span style="color:#eeffff;">│ 0 │ 65a7d8646e7591cfd372ee51 │ 1                │ test1 │
-</span><span style="color:#eeffff;">╰───┴──────────────────────────┴──────────────────┴───────╯
+<pre style="background-color:#263238;"><span style="color:#eeffff;">╭───┬──────────────────────────┬──────────────────┬──────┬────────╮
+</span><span style="color:#eeffff;">│ # │       identity_id        │ identity_version │ name │ status │
+</span><span style="color:#eeffff;">├───┼──────────────────────────┼──────────────────┼──────┼────────┤
+</span><span style="color:#eeffff;">│ 0 │ 65bc28415a24182705f5c90a │ 1                │ test │ Draft  │
+</span><span style="color:#eeffff;">╰───┴──────────────────────────┴──────────────────┴──────┴────────╯
 </span></pre>
 
 <p>In this case, we used UAMCLI to fetch the list of available assets and piped the output to NuShell to select only the fields that we are interested. With NuShell you can do further data manupulations, store the results to a file and execute other programs as needed.
 It is a great tool to build custom scripts.</p>
+<p><strong><em>:point_right: NOTE:</em></strong>
+The current version of UAMCLI does not implement search criteria. This is a feature we plan to implement later. At this time, the search command always returns the full list of assets in your project.</p>
 <h3>Uploading metadata</h3>
 <p>An asset contains files, but also can have metadata, which is a collection of key/value pairs that are used to describe the contents. For example, you may have a property named "Material" that indicates the type of material used
 to make a 3D object.</p>
@@ -611,14 +675,15 @@ In the future we should be able to automatically register new metadata field def
 <h2>Roadmap</h2>
 <p><em>The project is work in progress. No release has been provided as of yet. Most of the work is under the 'develop' branch.</em></p>
 <ul>
-<li> Add login/logoff functions</li>
-<li> Implement basic asset operations (create, search, metadata)</li>
-<li> Implement basic file operations (upload)</li>
-<li> Add Changelog</li>
-<li> Test suite</li>
-<li> CI/CD</li>
-<li> Support for multiple organizations and projects</li>
-<li> Create documentation via Github Pages</li>
+<li>:white_check_mark: Add login/logoff functions</li>
+<li>:white_check_mark: Implement basic asset operations (create, search, metadata)</li>
+<li>:white_check_mark: Implement basic file operations (upload)</li>
+<li>:white_check_mark: Add Changelog</li>
+<li>:white_check_mark: CI/CD</li>
+<li>:white_check_mark: Create documentation</li>
+<li>Better error messages</li>
+<li>Test suite</li>
+<li>Support for multiple organizations and projects</li>
 </ul>
 <p>See the <a href="https://github.com/jchultarsky101/uamcli/issues" rel="noopener noreferrer">open issues</a> for a full list of proposed features (and known issues).</p>
 
