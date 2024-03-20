@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## v0.1.5
+
+Bug fixes:
+
+* Setting the asset type to '3D Model' when uploading 3D CAD files
+* Resolved a bug causing files not to be recognized as 3D models
  
 ## v0.1.0
  
