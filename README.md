@@ -124,9 +124,10 @@ Command Line Interface for the Unity Asset Manager
 Usage: uamcli <COMMAND>
 
 Commands:
-  config  Working with configuration
-  asset   Digital asset operations
-  help    Print this message or the help of the given subcommand(s)
+  config          Working with configuration
+  asset           Digital asset operations
+  transformation  Transformation operations
+  help            Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help (see more with '--help')
@@ -155,16 +156,17 @@ Command Line Interface for the Unity Asset Manager
 Usage: uamcli <COMMAND>
 
 Commands:
-  config  Working with configuration
-  asset   Digital asset operations
-  help    Print this message or the help of the given subcommand(s)
+  config          Working with configuration
+  asset           Digital asset operations
+  transformation  Transformation operations
+  help            Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help
           Print help (see a summary with '-h')
 
   -V, --version
-          Print version
+          Print versio
 ````
 
 To get more detailed help on a particular command, enter it after the 'help' command. You can see the available commands.
@@ -567,6 +569,20 @@ You could save this into the same CSV file format with the header using NuShell:
 
 ````
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from json | get metadata | columns | each {|c| [['Name', 'Value']; [$c, ($props | get $c)]]} | flatten | to csv | save data/metadata/metadata2.csv
+````
+
+### Transformations
+
+In the context of Unity Asset Manager, transformations are processes that can be executed on files to produce other objects.
+For example, provided that we have an asset representing a 3D model, one could execute a transformation to automatically generate thumbnails to be displayed in the list.
+Some transformations, such as the one mentioned above are triggered automatically when files are uploaded. Transformations are executed in the background. 
+
+To work with transformations, we use the **transformation** command.
+
+To list all available transformations for the current project, we can use the **transformation search** subcommand.
+
+````
+uamcli transormation search
 ````
 
 <!-- ROADMAP -->
