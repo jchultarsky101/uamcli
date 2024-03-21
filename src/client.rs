@@ -63,6 +63,8 @@ struct AuthenticationResponse {
 
 #[derive(Debug, Serialize)]
 struct PaginationRequest {
+    #[serde(rename = "token")]
+    token: Option<String>,
     #[serde(rename = "sortingField")]
     sorting_field: String,
 }
@@ -70,7 +72,17 @@ struct PaginationRequest {
 impl Default for PaginationRequest {
     fn default() -> Self {
         PaginationRequest {
+            token: None,
             sorting_field: "name".to_string(),
+        }
+    }
+}
+
+impl PaginationRequest {
+    pub fn new(token: Option<String>, sorting_field: String) -> Self {
+        Self {
+            token,
+            sorting_field,
         }
     }
 }
@@ -84,10 +96,10 @@ struct AssetSearchRequest {
 }
 
 impl AssetSearchRequest {
-    fn new(project_id: String) -> Self {
+    fn new(project_id: String, token: Option<String>) -> Self {
         AssetSearchRequest {
             project_ids: vec![project_id.to_owned()],
-            pagination: PaginationRequest::default(),
+            pagination: PaginationRequest::new(token, "name".to_string()),
         }
     }
 }
@@ -157,7 +169,7 @@ impl Into<Asset> for AssetResponse {
 #[derive(Debug, Deserialize)]
 struct AssetSearchResponse {
     #[serde(rename = "next")]
-    _next: String,
+    next: Option<String>,
     #[serde(rename = "assets")]
     assets: Vec<AssetResponse>,
 }
@@ -933,6 +945,34 @@ impl Client {
     /// It will simply return all available assets in the project.
     /// Future versions may provide more control to filter the desired subset.
     pub async fn search_asset(&self) -> Result<Vec<Asset>, ClientError> {
+        log::trace!("Searching for assets...");
+
+        let mut assets: Vec<Asset> = Vec::new();
+        let mut token: Option<String> = None;
+        loop {
+            let spare_token = token.clone();
+            let response = self.search_asset_partial(spare_token).await?;
+            assets.extend(response.0);
+            log::trace!("Asset count: {}", assets.len());
+            token = response.1.clone();
+
+            match token.clone() {
+                Some(token) => {
+                    if token.is_empty() {
+                        break;
+                    }
+                }
+                None => break,
+            }
+        }
+
+        Ok(assets)
+    }
+
+    async fn search_asset_partial(
+        &self,
+        token: Option<String>,
+    ) -> Result<(Vec<Asset>, Option<String>), ClientError> {
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
         let mut token_values: HashMap<String, String> = HashMap::new();
         token_values.insert("projectId".to_string(), self.project_id.to_owned());
@@ -943,7 +983,7 @@ impl Client {
         .unwrap();
         url.push_str(path.as_str());
 
-        let asset_search_request = AssetSearchRequest::new(self.project_id.to_owned());
+        let asset_search_request = AssetSearchRequest::new(self.project_id.to_owned(), token);
 
         log::trace!("POST {}", url);
 
@@ -965,12 +1005,13 @@ impl Client {
         if status.is_success() {
             let content = response.text().await?;
 
-            log::trace!("Response: {}", content);
+            //log::trace!("Response: {}", content);
 
             let response: AssetSearchResponse = serde_yaml::from_str(&content).unwrap();
             let assets: Vec<Asset> = response.assets.into_iter().map(|a| a.into()).collect();
+            let next = response.next;
 
-            Ok(assets)
+            Ok((assets, next))
         } else {
             Err(ClientError::UnexpectedResponse(status))
         }
