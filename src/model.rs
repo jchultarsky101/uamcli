@@ -313,3 +313,42 @@ pub struct MetadataDefinition {
     #[serde(rename = "type")]
     pub value_type: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Transformation {
+    id: String,
+    asset_identity: AssetIdentity,
+    status: String,
+    progress: usize,
+    workflow_type: String,
+    job_id: String,
+    created_on: String,
+    started_at: Option<String>,
+    updated_at: Option<String>,
+}
+
+impl Transformation {
+    pub fn new(
+        id: String,
+        asset_identity: AssetIdentity,
+        status: String,
+        progress: usize,
+        workflow_type: String,
+        job_id: String,
+        created_on: String,
+        started_at: Option<String>,
+        updated_at: Option<String>,
+    ) -> Self {
+        Transformation {
+            id,
+            asset_identity,
+            status,
+            progress,
+            workflow_type,
+            job_id,
+            created_on,
+            started_at,
+            updated_at,
+        }
+    }
+}

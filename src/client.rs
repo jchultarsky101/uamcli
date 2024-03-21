@@ -2,7 +2,9 @@
 //!
 //! Contains methods to invoke REST API endpoints.
 //! It is used by the Api struct.
-use crate::model::{Asset, AssetIdentity, AssetStatus, Dataset, MetadataDefinition};
+use crate::model::{
+    Asset, AssetIdentity, AssetStatus, Dataset, MetadataDefinition, Transformation,
+};
 use base64::{engine::general_purpose, Engine};
 use dirs;
 use futures::StreamExt;
@@ -258,6 +260,46 @@ struct AssetDownloadUrlResponse {
 struct AllAssetDownloadUrlsResponse {
     #[serde(rename = "files")]
     files: Vec<AssetDownloadUrlResponse>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct TransformationSearchResponse {
+    #[serde(rename = "id")]
+    id: String,
+    #[serde(rename = "assetId")]
+    asset_id: String,
+    #[serde(rename = "assetVersion")]
+    asset_version: String,
+    #[serde(rename = "status")]
+    status: String,
+    #[serde(rename = "progress")]
+    progress: usize,
+    #[serde(rename = "workflowType")]
+    workflow_type: String,
+    #[serde(rename = "jobId")]
+    job_id: String,
+    #[serde(rename = "createdOn")]
+    created_on: String,
+    #[serde(rename = "startedAt")]
+    started_at: Option<String>,
+    #[serde(rename = "updatedAt")]
+    updated_at: Option<String>,
+}
+
+impl Into<Transformation> for TransformationSearchResponse {
+    fn into(self) -> Transformation {
+        Transformation::new(
+            self.id,
+            AssetIdentity::new(self.asset_id, self.asset_version),
+            self.status,
+            self.progress,
+            self.workflow_type,
+            self.job_id,
+            self.created_on,
+            self.started_at,
+            self.updated_at,
+        )
+    }
 }
 
 const UNITY_TOKEN_EXCHANGE_URL: &'static str = "https://services.api.unity.com/auth/v1/token-exchange?projectId={PROJECT_ID}&environmentId={ENVIRONMENT_ID}";
@@ -934,6 +976,48 @@ impl Client {
         }
     }
 
+    pub async fn search_transformations(&self) -> Result<Vec<Transformation>, ClientError> {
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/transformations",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        log::trace!("GET {}", url);
+
+        let response = self
+            .http
+            .get(url)
+            .header("cache-control", "no-cache")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+
+            log::trace!("Response: {}", content);
+
+            let response: Vec<TransformationSearchResponse> =
+                serde_yaml::from_str(&content).unwrap();
+            let transformations: Vec<Transformation> =
+                response.into_iter().map(|a| a.into()).collect();
+
+            Ok(transformations)
+        } else {
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
     /// Returns the definition for a metadata field from the Unity Organization.
     /// If such property does not exist, it will return None.
     ///
@@ -1040,6 +1124,59 @@ impl Client {
             log::trace!("Response: {}", content);
             Ok(())
         } else {
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
+    /// Terminates a transformation
+    ///
+    /// Parameters:
+    ///
+    /// * transformation_id - the ID of the transformation to be terminated
+    pub async fn terminate_transformation(
+        &self,
+        transformation_id: String,
+    ) -> Result<(), ClientError> {
+        log::trace!(
+            "Requesting to terminate transformation {}",
+            transformation_id.to_owned()
+        );
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        token_values.insert("transformationId".to_string(), transformation_id.to_owned());
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/transformations/{transformationId}/termination",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        log::trace!("POST {}", url);
+
+        let response = self
+            .http
+            .post(url)
+            .header("cache-control", "no-cache")
+            .header("content-length", "0")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+            log::trace!("Response: {}", content);
+
+            Ok(())
+        } else {
+            let content = response.text().await?;
+            log::error!("Response: {}", content);
+
             Err(ClientError::UnexpectedResponse(status))
         }
     }

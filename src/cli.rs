@@ -27,6 +27,7 @@ const COMMAND_DOWNLOAD: &str = "download";
 const COMMAND_UPLOAD: &str = "upload";
 const COMMAND_STATUS: &str = "status";
 const COMMAND_METADATA: &str = "metadata";
+const COMMAND_TRANSFORMATION: &str = "transformation";
 
 const PARAMETER_OUTPUT: &str = "output";
 const PARAMETER_DOWNLOAD_DIR: &str = "download-dir";
@@ -42,6 +43,7 @@ const PARAMETER_ASSET_VERSION: &str = "asset-version";
 const PARAMETER_DATA_FILE: &str = "data";
 const PARAMETER_STATUS: &str = "status";
 const PARAMETER_PUBLISH: &str = "publish";
+const PARAMETER_TRANSFORMATION_ID: &str = "transformation-id";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -227,6 +229,7 @@ impl Cli {
                             .about("Status operations on an asset")
                             .subcommand(
                                 Command::new(COMMAND_SET)
+                                    .about("Sets the asset's status")
                                     .arg(asset_id_parameter.clone())
                                     .arg(asset_version_parameter.clone())
                                     .arg(
@@ -242,6 +245,7 @@ impl Cli {
                             .about("Metadata operations")
                             .subcommand(
                                 Command::new(COMMAND_UPLOAD)
+                                    .about("Uploads metadata for the asset")
                                     .arg(asset_id_parameter.clone())
                                     .arg(asset_version_parameter.clone())
                                     .arg(
@@ -253,6 +257,23 @@ impl Cli {
                                             .value_parser(clap::value_parser!(PathBuf)),
                                     ),
                             )
+                    )
+            )
+            .subcommand(
+                Command::new(COMMAND_TRANSFORMATION)
+                    .about("Transformation operations")
+                    .subcommand(
+                        Command::new(COMMAND_SEARCH).about("Lists transfomrations for the current project"),
+                    )
+                    .subcommand(
+                        Command::new(COMMAND_DELETE)
+                            .about("Terminates a transformation")
+                            .arg(
+                                Arg::new(PARAMETER_TRANSFORMATION_ID)
+                                    .long(PARAMETER_TRANSFORMATION_ID)
+                                    .required(true)
+                                    .help("Transformation ID to be terminated")
+                            ),
                     )
             )
             .get_matches()
@@ -320,6 +341,21 @@ impl Cli {
                     api.configuration().borrow().delete()?;
                 }
                 _ => unreachable!("Invalid subcommand for 'config set"),
+            },
+            Some((COMMAND_TRANSFORMATION, sub_matches)) => match sub_matches.subcommand() {
+                Some((COMMAND_SEARCH, _)) => {
+                    let transformations = api.search_transformations().await?;
+                    let json = serde_json::to_string(&transformations).unwrap();
+                    println!("{}", json);
+                }
+                Some((COMMAND_DELETE, sub_matches)) => {
+                    let transofmation_id = sub_matches
+                        .get_one::<String>(PARAMETER_TRANSFORMATION_ID)
+                        .unwrap();
+                    api.terminate_transformation(transofmation_id.to_owned())
+                        .await?;
+                }
+                _ => unreachable!("Invalid subcommand for 'transformation'"),
             },
             Some((COMMAND_ASSET, sub_matches)) => match sub_matches.subcommand() {
                 Some((COMMAND_SEARCH, _)) => {

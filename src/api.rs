@@ -6,7 +6,7 @@
 use crate::{
     client::Client,
     configuration::Configuration,
-    model::{Asset, AssetIdentity, AssetStatus, MetadataEntry},
+    model::{Asset, AssetIdentity, AssetStatus, MetadataEntry, Transformation},
 };
 use std::{cell::RefCell, collections::HashMap, fs::File, path::PathBuf};
 use thiserror::Error;
@@ -284,6 +284,32 @@ impl Api {
                     None => Err(ApiError::AssetNotFound),
                 }
             }
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
+    /// Returns a list of transformations that match the search criteria
+    ///
+    /// NOTE: At this time this method does not take arguments and returns all transformations for the project
+    pub async fn search_transformations(&mut self) -> Result<Vec<Transformation>, ApiError> {
+        self.init().await?;
+        log::trace!("Searching for transformations...");
+        match &self.client {
+            Some(client) => Ok(client.search_transformations().await?),
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
+    /// Issues termination request for an existing transformation
+    ///
+    pub async fn terminate_transformation(
+        &mut self,
+        transformation_id: String,
+    ) -> Result<(), ApiError> {
+        self.init().await?;
+        log::trace!("Terminating transformation...");
+        match &self.client {
+            Some(client) => Ok(client.terminate_transformation(transformation_id).await?),
             None => Err(ApiError::ClientNotInitialized),
         }
     }
