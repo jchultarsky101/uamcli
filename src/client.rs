@@ -2,7 +2,9 @@
 //!
 //! Contains methods to invoke REST API endpoints.
 //! It is used by the Api struct.
-use crate::model::{Asset, AssetIdentity, AssetStatus, Dataset, MetadataDefinition};
+use crate::model::{
+    Asset, AssetIdentity, AssetStatus, Dataset, MetadataDefinition, ThumbnailGenerationRequest,
+};
 use base64::{engine::general_purpose, Engine};
 use dirs;
 use futures::StreamExt;
@@ -390,7 +392,7 @@ impl Client {
         dataset_id: &String,
         local_file_path: &Path,
     ) -> Result<FileCreateResponse, ClientError> {
-        log::trace!("Reuesting remote file creation...");
+        log::trace!("Requesting remote file creation...");
 
         let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
         let mut token_values: HashMap<String, String> = HashMap::new();
@@ -460,7 +462,7 @@ impl Client {
         let remote_file_path: String =
             url::form_urlencoded::byte_serialize(remote_file_path.as_bytes()).collect();
         let path_str = String::from(local_file_path.to_string_lossy());
-        log::trace!("Uploading file {} to Unity Asset Manager", path_str);
+        log::trace!("Uploading file {} to the Unity Asset Manager", path_str);
 
         let create_result = self
             .create_file(asset_identity, dataset_id, local_file_path)
@@ -477,6 +479,7 @@ impl Client {
         );
 
         let file = tokio::fs::File::open(local_file_path).await?;
+        let file_size = file.metadata().await.unwrap().len();
         let stream = FramedRead::new(file, BytesCodec::new());
         let body = Body::wrap_stream(stream);
 
@@ -484,7 +487,7 @@ impl Client {
             .http
             .put(url)
             .header("x-ms-blob-type", "BlockBlob")
-            .header("Content-Length", "0")
+            .header("Content-Length", file_size)
             .body(body)
             .send()
             .await?;
@@ -672,6 +675,111 @@ impl Client {
         }
     }
 
+    /// Sets the dataset pripary type.
+    ///
+    /// Parameters:
+    /// * asset_identity - the asset identity (ID and Version)
+    /// * name - dataset name
+    /// * type - dataset type (e.g. "3D Model")
+    async fn set_dataset_type(
+        &self,
+        asset_identity: &AssetIdentity,
+        dataset_id: String,
+        dataset_name: String,
+        primary_type: String,
+    ) -> Result<(), ClientError> {
+        log::trace!("Upldating dataset primary type...");
+
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        token_values.insert("assetId".to_string(), asset_identity.id());
+        token_values.insert("assetVersion".to_string(), asset_identity.version());
+        token_values.insert("datasetId".to_string(), dataset_id.to_owned());
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/datasets/{datasetId}",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        let dataset_update_request = Dataset::new(dataset_id, dataset_name, Some(primary_type));
+
+        log::trace!("PATCH {}", url);
+        let response = self
+            .http
+            .patch(url)
+            .header("cache-control", "no-cache")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .json(&dataset_update_request)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            Ok(())
+        } else {
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
+    /// Create thumbnails
+    ///
+    /// Parameters:
+    /// * asset_identity - the asset identity (ID and version)
+    /// * dataset_id - the ID of the dataset
+    async fn generate_thumbnails(
+        &self,
+        asset_identity: &AssetIdentity,
+        dataset_id: &String,
+        files: Vec<String>,
+    ) -> Result<(), ClientError> {
+        log::trace!("Generating thumbnails...");
+
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_ORGANIZATION_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        token_values.insert("assetId".to_string(), asset_identity.id());
+        token_values.insert("assetVersion".to_string(), asset_identity.version());
+        token_values.insert("datasetId".to_string(), dataset_id.to_owned());
+        // https://services.api.unity.com/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/datasets/{datasetId}/transformations/start/{workFlowType}
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/datasets/{datasetId}/transformations/start/thumbnail-generator",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        let thumbnail_generation_request = ThumbnailGenerationRequest::new(files);
+
+        log::trace!("POST {}", url);
+        log::trace!("POST Body: {:?}", thumbnail_generation_request);
+
+        let response = self
+            .http
+            .post(url)
+            .header("cache-control", "no-cache")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            //.json(&thumbnail_generation_request)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            Ok(())
+        } else {
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
     /// Creates a new Unity asset. Uploads one or more files to the asset.
     ///
     /// Parameters:
@@ -695,6 +803,7 @@ impl Client {
         let asset_create_request = AssetCreateRequest::new(name, description);
 
         log::trace!("POST {}", url);
+        log::trace!("POST Body: {:?}", asset_create_request);
 
         let response = self
             .http
@@ -722,12 +831,42 @@ impl Client {
             let source_dataset = datasets.iter().find(|dataset| dataset.name().eq("Source"));
             match source_dataset {
                 Some(source_dataset) => {
+                    log::trace!(
+                        "Asset ID: {}, SOURCE Dataset ID: {}",
+                        identity.id(),
+                        source_dataset.id()
+                    );
                     let source_dataset_id = source_dataset.id();
 
-                    for path in data_files {
+                    // update the "Source" dataset type to be "3D Model"
+                    self.set_dataset_type(
+                        &identity,
+                        source_dataset_id.to_owned(),
+                        "Source".to_string(),
+                        "3D Model".to_string(),
+                    )
+                    .await?;
+
+                    for path in &data_files {
                         self.upload_file(&identity, &source_dataset_id, path.as_path())
                             .await?;
                     }
+
+                    /*
+                    let files: Vec<String> = data_files
+                        .iter()
+                        .map(|f| {
+                            f.file_name()
+                                .unwrap_or_default()
+                                .to_string_lossy()
+                                .to_string()
+                        })
+                        .collect();
+
+                    let _ = self
+                        .generate_thumbnails(&identity, &source_dataset_id, files)
+                        .await;
+                    */
                 }
                 None => return Err(ClientError::NoSourceDataset),
             }
