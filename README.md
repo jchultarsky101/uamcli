@@ -85,6 +85,8 @@ Here's why:
 * There is no SDK (as of end of 2023) for Rust
 * We like Unity and what they do :smile:
 
+:warning: **Disclaimer**: This software is an open-source project and is not an officially supported product of Physna, Inc. Its primary purpose is to serve as a reference implementation and provide examples for utilizing the APIs. It has not been assessed for SOC2 compliance. Please make sure to read the license.
+
 ### Built With
 
 This project is built with the wonderful programming language [Rust](https://www.rust-lang.org).
