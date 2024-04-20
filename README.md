@@ -568,6 +568,7 @@ At the time of writing the Unity Asset Manager is still in beta. Only previously
 attempting to assign values to them.
 In the future we should be able to automatically register new metadata field definitions as needed.
 
+
 To see the effect of the above command, we can use the *asset get* command again and with the help of NuShell we can subselect the metadata from the output:
 
 ````
