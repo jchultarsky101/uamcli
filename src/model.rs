@@ -151,7 +151,6 @@ pub struct Asset {
     labels: Vec<String>,
     primary_type: String,
     status: String,
-    frozen: bool,
     source_project_id: String,
     project_ids: Vec<String>,
     preview_file: Option<String>,
@@ -170,7 +169,6 @@ impl Asset {
         labels: Vec<String>,
         primary_type: String,
         status: String,
-        frozen: bool,
         source_project_id: String,
         project_ids: Vec<String>,
         preview_file: Option<String>,
@@ -187,7 +185,6 @@ impl Asset {
             labels,
             primary_type,
             status,
-            frozen,
             source_project_id,
             project_ids,
             preview_file,
@@ -261,14 +258,6 @@ impl Asset {
         self.status = status.to_owned();
     }
 
-    pub fn frozen(&self) -> bool {
-        self.frozen
-    }
-
-    pub fn set_frozen(&mut self, frozen: bool) {
-        self.frozen = frozen
-    }
-
     pub fn source_project_id(&self) -> String {
         self.source_project_id.to_owned()
     }
@@ -293,7 +282,7 @@ impl Asset {
         self.preview_file = preview_file.to_owned();
     }
 
-    pub fn preview_file_dataset_if(&self) -> Option<String> {
+    pub fn preview_file_dataset_id(&self) -> Option<String> {
         self.preview_file_dataset_id.to_owned()
     }
 
