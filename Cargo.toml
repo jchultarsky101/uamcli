@@ -7,6 +7,12 @@ description = "Command Line Interface for the Unity Asset Manager"
 repository = "https://github.com/jchultarsky101/uamcli.git"
 license = "MIT"
 
+[package.metadata.wix]
+upgrade-guid = "9CCA4A12-F22B-42BC-8BEB-DB84C238A8C9"
+path-guid = "FCFAB5BE-DE6F-4AD8-BEA4-9D3DE51B47C2"
+license = false
+eula = false
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -40,12 +46,18 @@ lto = "thin"
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
-cargo-dist-version = "0.11.1"
+cargo-dist-version = "0.13.1"
 # CI backends to support
 ci = ["github"]
 # The installers to generate for each app
-installers = ["shell"]
+installers = ["shell", "powershell", "npm", "msi"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
 # Publish jobs to run in CI
 pr-run-mode = "plan"
+# The archive format to use for windows builds (defaults .zip)
+windows-archive = ".tar.gz"
+# The archive format to use for non-windows builds (defaults .tar.xz)
+unix-archive = ".tar.gz"
+# Whether to install an updater program
+install-updater = true
