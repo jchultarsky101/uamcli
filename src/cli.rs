@@ -27,6 +27,7 @@ const COMMAND_DOWNLOAD: &str = "download";
 const COMMAND_UPLOAD: &str = "upload";
 const COMMAND_STATUS: &str = "status";
 const COMMAND_METADATA: &str = "metadata";
+const COMMAND_GENERATE_THUMBNAIL: &str = "generate-thumbnail";
 
 const PARAMETER_OUTPUT: &str = "output";
 const PARAMETER_DOWNLOAD_DIR: &str = "download-dir";
@@ -42,6 +43,7 @@ const PARAMETER_ASSET_VERSION: &str = "asset-version";
 const PARAMETER_DATA_FILE: &str = "data";
 const PARAMETER_STATUS: &str = "status";
 const PARAMETER_PUBLISH: &str = "publish";
+const PARAMETER_ASSET_NAME: &str = "asset-name";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -170,7 +172,29 @@ impl Cli {
                     .about("Digital asset operations")
                     .subcommand_required(true)
                     .subcommand(
-                        Command::new(COMMAND_SEARCH).about("Searches for assets in the project"),
+                        Command::new(COMMAND_SEARCH)
+                            .about("Searches for assets in the project")
+                            .arg(Arg::new(PARAMETER_ASSET_ID)
+                                .help("Optional: The asset ID")
+                                .long(PARAMETER_ASSET_ID)
+                                .required(false)
+                                .action(ArgAction::Set)
+                            )
+                            .arg(Arg::new(PARAMETER_ASSET_VERSION)
+                                .help("Asset version. Required if an asset ID is provided")
+                                .long(PARAMETER_ASSET_VERSION)
+                                .requires(PARAMETER_ASSET_ID)
+                                .required(false)
+                                .default_value("1")
+                                .action(ArgAction::Set)
+                                
+                            )
+                            .arg(Arg::new(PARAMETER_ASSET_NAME)
+                                .help("Optional: The name of the asset")
+                                .long(PARAMETER_ASSET_NAME)
+                                .required(false)
+                                .action(ArgAction::Set)
+                            ),
                     )
                     .subcommand(
                         Command::new(COMMAND_GET)
@@ -254,6 +278,25 @@ impl Cli {
                                     ),
                             )
                     )
+                    .subcommand(
+                        Command::new(COMMAND_GENERATE_THUMBNAIL)
+                            .about("Generates thumbnails for asset(s)")
+                            .arg(Arg::new(PARAMETER_ASSET_ID)
+                                .help("Optional: The asset ID. If not provided, it will attempt to generate thumbnails for assets in the project that do not have one already")
+                                .long(PARAMETER_ASSET_ID)
+                                .required(false)
+                                .action(ArgAction::Set)
+                            )
+                            .arg(Arg::new(PARAMETER_ASSET_VERSION)
+                                .help("Asset version. Required if an asset ID is provided")
+                                .long(PARAMETER_ASSET_VERSION)
+                                .requires(PARAMETER_ASSET_ID)
+                                .required(false)
+                                .default_value("1")
+                                .action(ArgAction::Set)
+                                
+                            ),
+                    )
             )
             .get_matches()
     }
@@ -322,12 +365,23 @@ impl Cli {
                 _ => unreachable!("Invalid subcommand for 'config set"),
             },
             Some((COMMAND_ASSET, sub_matches)) => match sub_matches.subcommand() {
-                Some((COMMAND_SEARCH, _)) => {
-                    let assets = api.search_asset().await?;
+                // Asset commands
+                Some((COMMAND_SEARCH, sub_matches)) => {
+                    let asset_name: Option<&String> = sub_matches.get_one::<String>(PARAMETER_ASSET_NAME);
+                    let asset_id: Option<&String> = sub_matches.get_one::<String>(PARAMETER_ASSET_ID);
+                    let asset_version: Option<&String> = sub_matches.get_one::<String>(PARAMETER_ASSET_VERSION);
+
+                    let asset_id = match (asset_id, asset_version) {
+                        (Some(asset_id), Some(asset_version)) => {
+                            Some(AssetIdentity::new(asset_id.to_owned(), asset_version.to_owned()))
+                        }
+                        _ => None,
+                    };
+
+                    let assets = api.search_asset(asset_id, asset_name.map(|n| n.clone())).await?;
                     let json = serde_json::to_string(&assets).unwrap();
                     println!("{}", json);
                 }
-                // Asset commands
                 Some((COMMAND_CREATE, sub_matches)) => {
                     let name = sub_matches.get_one::<String>(PARAMETER_NAME).unwrap();
                     let description = sub_matches.get_one::<String>(PARAMETER_DESCRIPTION);
@@ -399,6 +453,21 @@ impl Cli {
                     }
                     _ => unreachable!("Invalid subsommand for 'asset metadata'"), // this will never be reached because the command is validated first
                 },
+                Some((COMMAND_GENERATE_THUMBNAIL, sub_matches)) => {
+                    let asset_id: Option<&String> = sub_matches.get_one::<String>(PARAMETER_ASSET_ID);
+                    let asset_version: Option<&String> = sub_matches.get_one::<String>(PARAMETER_ASSET_VERSION);
+
+                    let asset_id = match (asset_id, asset_version) {
+                        (Some(asset_id), Some(asset_version)) => {
+                            Some(AssetIdentity::new(asset_id.to_owned(), asset_version.to_owned()))
+                        }
+                        _ => None,
+                    };
+
+                    let assets = api.generate_asset_thumbnail(asset_id).await?;
+                    let json = serde_json::to_string(&assets).unwrap();
+                    println!("{}", json);
+                }
                 _ => unreachable!("Invalid subsommand for 'asset'"),
             },
             _ => unreachable!("Invalid command"),

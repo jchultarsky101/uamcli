@@ -490,9 +490,25 @@ uamcli asset search | from json | select identity.id identity.version name statu
 In this case, we used UAMCLI to fetch the list of available assets and piped the output to NuShell to select only the fields that we are interested. With NuShell you can do further data manupulations, store the results to a file and execute other programs as needed.
 It is a great tool to build custom scripts.
 
+You can make your query more specific by providing either an asset name or a combination of asset ID and asset version. For example, if you want to search for an asset by name, you can do the following:
 
-**_👉 NOTE:_**
-The current version of UAMCLI does not implement search criteria. This is a feature we plan to implement later. At this time, the search command always returns the full list of assets in your project.
+````bash
+uamcli asset search --asset-name 'MyPart'
+````
+
+If such asset exists, it will be returned.
+
+To search by ID, you can do:
+
+````bash
+uamcli asset search --asset-id '65fb2b9c862ec38597b4840A' --asset-version '1'
+````
+
+If you do not provide the version (optional) the default version number of '1' will be assumed.
+
+**_👉 NOTE:_**z
+You cannot specify both a name and ID in the same query.
+
 
 ### Uploading metadata
 
@@ -545,7 +561,7 @@ uamcli asset metadata upload --asset-id 65a7d8646e7591cfd372ee51 --asset-version
 
 If successful, there is no output. Once the command completes, the asset will contain the three metadata properties with their respective values.
 
-**_👉 NOTE:_**
+**_👉 NOTE:_**z
 At the time of writing the Unity Asset Manager is still in beta. Only previously registered metadata field definitions can be used. Make sure you add those definitions to your Unity organization before
 attempting to assign values to them.
 In the future we should be able to automatically register new metadata field definitions as needed.

@@ -96,16 +96,20 @@ impl Api {
     //     todo!("Implement logoff");
     // }
 
-    /// Returns a list of Asset objects found in this project.
+    /// Returns a list of Asset objects matching the search criteria in the current project.
     ///
-    /// The current implementation returns all assets found in a project.
-    /// It does not use a search criteria to deliver a matching subset.
-    /// More sophisticated version is on the roadmap.
-    pub async fn search_asset(&mut self) -> Result<Vec<Asset>, ApiError> {
+    /// Parameters:
+    ///
+    /// asset_id: (optional) the asset identity (if, version). If none provided, it will return all assets in the project
+    pub async fn search_asset(
+        &mut self,
+        asset_id: Option<AssetIdentity>,
+        asset_name: Option<String>,
+    ) -> Result<Vec<Asset>, ApiError> {
         self.init().await?;
-        log::trace!("Searching for assets...");
+
         match &self.client {
-            Some(client) => Ok(client.search_asset().await?),
+            Some(client) => Ok(client.search_asset(asset_id, asset_name).await?),
             None => Err(ApiError::ClientNotInitialized),
         }
     }
@@ -283,6 +287,62 @@ impl Api {
                     }
                     None => Err(ApiError::AssetNotFound),
                 }
+            }
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
+    /// Generates thumbnails and previews for the specified asset..
+    ///
+    /// Parameters:
+    ///
+    /// asset_id - (optional) the asset identity (id, version). If not provided, it will attempt to generate thumbnails for all assets in the project that do not have one.
+    pub async fn generate_asset_thumbnail(
+        &mut self,
+        asset_id: Option<AssetIdentity>,
+    ) -> Result<Vec<Asset>, ApiError> {
+        self.init().await?;
+
+        match &self.client {
+            Some(client) => {
+                let assets = client.search_asset(asset_id, None).await?;
+
+                for asset in assets.clone() {
+                    log::trace!(
+                        "Verifying thumbnails for asset id={}, version={}...",
+                        asset.identity().id(),
+                        asset.identity().version()
+                    );
+
+                    match asset.preview_file() {
+                        None => {
+                            log::trace!("This asset does not have a thumbnail!");
+
+                            let preview_file_dataset_id =
+                                asset.preview_file_dataset_id().unwrap_or_default();
+
+                            log::trace!(
+                                "The preview dataset ID is {}",
+                                preview_file_dataset_id.to_owned()
+                            );
+
+                            //let files: Vec<String> = Vec::new();
+
+                            /*
+                            client
+                                .generate_thumbnails(
+                                    &asset.identity(),
+                                    &preview_file_dataset_id,
+                                    files,
+                                )
+                                .await?;
+                            */
+                        }
+                        Some(_) => (),
+                    }
+                }
+
+                Ok(assets)
             }
             None => Err(ApiError::ClientNotInitialized),
         }

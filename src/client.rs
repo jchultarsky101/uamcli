@@ -62,21 +62,135 @@ struct AuthenticationResponse {
 }
 
 #[derive(Debug, Serialize)]
+pub enum SortingOrder {
+    Ascending,
+    Descending,
+}
+
+impl SortingOrder {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            SortingOrder::Ascending => "Ascending",
+            SortingOrder::Descending => "Descending",
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
 struct PaginationRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "token")]
+    token: Option<String>,
+    #[serde(rename = "limit")]
+    limit: usize,
     #[serde(rename = "sortingField")]
     sorting_field: String,
+    #[serde(rename = "sortingOrder")]
+    sorting_order: SortingOrder,
 }
 
 impl Default for PaginationRequest {
     fn default() -> Self {
         PaginationRequest {
+            token: None,
+            limit: 50,
             sorting_field: "name".to_string(),
+            sorting_order: SortingOrder::Ascending,
+        }
+    }
+}
+
+impl PaginationRequest {
+    pub fn new(
+        token: Option<String>,
+        limit: usize,
+        sorting_field: String,
+        sorting_order: SortingOrder,
+    ) -> Self {
+        Self {
+            token,
+            limit,
+            sorting_field,
+            sorting_order,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct AssetSearchFilter {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "includeQuery")]
+    include_query: Option<AssetIncludeQuery>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(rename = "includeFields")]
+    include_fields: Vec<String>,
+}
+
+impl Default for AssetSearchFilter {
+    fn default() -> Self {
+        let include_fields = vec![
+            //"*",
+            "name",
+            "description",
+            "tags",
+            "primaryType",
+            "portalMetadata",
+            "metadata",
+            "VersionNumber",
+            "previewFileUrl",
+            "datasets.name",
+            "datasets.description",
+            "datasets.tags",
+            "datasets.portalMetadata",
+            "datasets.metadata",
+            "datasets.systemMetadata",
+            "datasets.primaryType",
+            "files.filePath",
+            "files.description",
+            "files.tags",
+            "files.portalMetadata",
+            "files.metadata",
+            "files.systemMetadata",
+            "files.userChecksum",
+            "files.fileSize",
+            "files.downloadUrl",
+            "files.previewURL",
+        ];
+        Self {
+            include_query: None,
+            include_fields: include_fields.into_iter().map(|s| s.to_owned()).collect(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct AssetIncludeQuery {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "assetId")]
+    asset_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "assetVersion")]
+    asset_version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "name")]
+    asset_name: Option<String>,
+}
+
+impl Default for AssetIncludeQuery {
+    fn default() -> Self {
+        AssetIncludeQuery {
+            asset_id: None,
+            asset_version: None,
+            asset_name: None,
         }
     }
 }
 
 #[derive(Debug, Serialize)]
 struct AssetSearchRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "filter")]
+    search_filter: Option<AssetSearchFilter>,
     #[serde(rename = "projectIds")]
     project_ids: Vec<String>,
     #[serde(rename = "pagination")]
@@ -84,10 +198,15 @@ struct AssetSearchRequest {
 }
 
 impl AssetSearchRequest {
-    fn new(project_id: String) -> Self {
+    fn new(
+        project_id: String,
+        search_filter: Option<AssetSearchFilter>,
+        pagination: PaginationRequest,
+    ) -> Self {
         AssetSearchRequest {
+            search_filter,
             project_ids: vec![project_id.to_owned()],
-            pagination: PaginationRequest::default(),
+            pagination,
         }
     }
 }
@@ -112,8 +231,6 @@ struct AssetResponse {
     primary_type: String,
     #[serde(rename = "status")]
     status: String,
-    #[serde(rename = "isFrozen")]
-    frozen: bool,
     #[serde(rename = "sourceProjectId")]
     source_project_id: String,
     #[serde(rename = "projectIds")]
@@ -143,7 +260,6 @@ impl Into<Asset> for AssetResponse {
             self.labels,
             self.primary_type,
             self.status,
-            self.frozen,
             self.source_project_id,
             self.project_ids,
             self.preview_file,
@@ -157,7 +273,7 @@ impl Into<Asset> for AssetResponse {
 #[derive(Debug, Deserialize)]
 struct AssetSearchResponse {
     #[serde(rename = "next")]
-    _next: String,
+    next: String,
     #[serde(rename = "assets")]
     assets: Vec<AssetResponse>,
 }
@@ -732,7 +848,7 @@ impl Client {
     /// Parameters:
     /// * asset_identity - the asset identity (ID and version)
     /// * dataset_id - the ID of the dataset
-    async fn generate_thumbnails(
+    pub async fn generate_thumbnails(
         &self,
         asset_identity: &AssetIdentity,
         dataset_id: &String,
@@ -1029,48 +1145,105 @@ impl Client {
     /// The current implementation does not take as parameters any search clauses.
     /// It will simply return all available assets in the project.
     /// Future versions may provide more control to filter the desired subset.
-    pub async fn search_asset(&self) -> Result<Vec<Asset>, ClientError> {
-        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
-        let mut token_values: HashMap<String, String> = HashMap::new();
-        token_values.insert("projectId".to_string(), self.project_id.to_owned());
-        let path = strfmt(
-            "/assets/v1/projects/{projectId}/assets/search",
-            &token_values,
-        )
-        .unwrap();
-        url.push_str(path.as_str());
+    pub async fn search_asset(
+        &self,
+        asset_id: Option<AssetIdentity>,
+        asset_name: Option<String>,
+    ) -> Result<Vec<Asset>, ClientError> {
+        let mut next: Option<String> = None;
+        let mut expect_more: bool = true;
+        let mut assets: Vec<Asset> = Vec::new();
+        let mut counter: usize = 0;
 
-        let asset_search_request = AssetSearchRequest::new(self.project_id.to_owned());
-
-        log::trace!("POST {}", url);
-
-        let response = self
-            .http
-            .post(url)
-            .header("cache-control", "no-cache")
-            .timeout(Duration::from_secs(30))
-            .basic_auth(
-                self.client_id.to_owned(),
-                Some(self.client_secret.to_owned()),
+        while expect_more {
+            let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
+            let mut token_values: HashMap<String, String> = HashMap::new();
+            token_values.insert("projectId".to_string(), self.project_id.to_owned());
+            let path = strfmt(
+                "/assets/v1/projects/{projectId}/assets/search",
+                &token_values,
             )
-            .query(&[("includeFields", "*")])
-            .json(&asset_search_request)
-            .send()
-            .await?;
+            .unwrap();
+            url.push_str(path.as_str());
 
-        let status = response.status();
-        if status.is_success() {
-            let content = response.text().await?;
+            let filter: Option<AssetSearchFilter> = if asset_id.is_some() || asset_name.is_some() {
+                let mut filter = AssetSearchFilter::default();
 
-            log::trace!("Response: {}", content);
+                let mut query: AssetIncludeQuery = AssetIncludeQuery::default();
 
-            let response: AssetSearchResponse = serde_yaml::from_str(&content).unwrap();
-            let assets: Vec<Asset> = response.assets.into_iter().map(|a| a.into()).collect();
+                match asset_id.to_owned() {
+                    None => (),
+                    Some(asset_id) => {
+                        query.asset_id = Some(asset_id.id());
+                        query.asset_version = Some(asset_id.version());
+                    }
+                }
 
-            Ok(assets)
-        } else {
-            Err(ClientError::UnexpectedResponse(status))
+                match asset_name.to_owned() {
+                    None => (),
+                    Some(name) => query.asset_name = Some(format!("*{}*", name)),
+                }
+
+                filter.include_query = Some(query);
+                Some(filter)
+            } else {
+                let filter = AssetSearchFilter::default();
+                Some(filter)
+            };
+
+            let pagination =
+                PaginationRequest::new(next, 50, String::from("name"), SortingOrder::Ascending);
+            let asset_search_request =
+                AssetSearchRequest::new(self.project_id.to_owned(), filter, pagination);
+
+            log::trace!("POST {}", url);
+            log::trace!("Request: {:?}", &asset_search_request);
+
+            let response = self
+                .http
+                .post(url.to_owned())
+                .header("cache-control", "no-cache")
+                .timeout(Duration::from_secs(120))
+                .basic_auth(
+                    self.client_id.to_owned(),
+                    Some(self.client_secret.to_owned()),
+                )
+                .query(&[("includeFields", "*")])
+                .json(&asset_search_request)
+                .send()
+                .await?;
+
+            counter += 1;
+
+            let status = response.status();
+            if status.is_success() {
+                let content = response.text().await?;
+
+                log::trace!("Response: {}", content);
+
+                let response: AssetSearchResponse = serde_yaml::from_str(&content).unwrap();
+                let token = response.next;
+                if token.is_empty() {
+                    log::trace!("No pagination token provided in the response");
+                    next = None;
+                } else {
+                    log::trace!("The response contains pagination token");
+                    next = Some(token.to_owned());
+                }
+
+                log::trace!("Page {}", counter);
+                log::trace!("Next: {:?}", &next);
+
+                expect_more = next.is_some();
+                let mut response_assets: Vec<Asset> =
+                    response.assets.into_iter().map(|a| a.into()).collect();
+                assets.append(&mut response_assets);
+            } else {
+                return Err(ClientError::UnexpectedResponse(status));
+            }
         }
+
+        Ok(assets)
     }
 
     /// Returns the definition for a metadata field from the Unity Organization.
