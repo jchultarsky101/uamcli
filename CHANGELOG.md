@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## v0.1.8
+
+New functionality:
+
+* Enhanced the search command to accept optional name and ID/version arguments
+
 ## v0.1.7
 
 Bug fixes:
