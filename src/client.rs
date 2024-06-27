@@ -21,6 +21,7 @@ use strfmt::strfmt;
 use thiserror::Error;
 use tokio_util::codec::{BytesCodec, FramedRead};
 use url::Url;
+use urlencoding::encode;
 
 /// Wrapper for all HTTP operation-related errors.
 #[derive(Error, Debug)]
@@ -331,11 +332,6 @@ impl Into<AssetIdentity> for AssetCreateResponse {
     fn into(self) -> AssetIdentity {
         AssetIdentity::new(self.id, self.version)
     }
-}
-#[derive(Debug, Serialize)]
-struct DatasetCreateRequest {
-    name: String,
-    description: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1010,6 +1006,7 @@ impl Client {
         .unwrap();
         url.push_str(path.as_str());
 
+        log::trace!("Reading asset data...");
         log::trace!("GET {}", url);
 
         let response = self
@@ -1062,6 +1059,7 @@ impl Client {
         .unwrap();
         url.push_str(path.as_str());
 
+        log::trace!("Updating asset data...");
         log::trace!("PATCH {}", url);
 
         let request: AssetCreateRequest = asset.to_owned().into();
@@ -1086,6 +1084,11 @@ impl Client {
             log::trace!("Response: {}", content);
             Ok(())
         } else {
+            let content = response.text().await;
+            match content {
+                Ok(content) => log::error!("Error: {}", content),
+                Err(_) => (),
+            }
             Err(ClientError::UnexpectedResponse(status))
         }
     }
@@ -1262,10 +1265,12 @@ impl Client {
             "organizationId".to_string(),
             self.organization_id.to_owned(),
         );
-        token_values.insert("name".to_string(), name.to_owned());
+        token_values.insert("name".to_string(), encode(name.as_str()).to_string());
+
+        log::trace!("Getting metadata definition for '{}'...", name.to_owned());
 
         let path = strfmt(
-            "/assets/v1/organizations/2475245830233/templates/fields/License",
+            "/assets/v1/organizations/{organizationId}/templates/fields/{name}",
             &token_values,
         )
         .unwrap();
@@ -1317,10 +1322,10 @@ impl Client {
             "organizationId".to_string(),
             self.organization_id.to_owned(),
         );
-        token_values.insert("name".to_string(), name.to_owned());
+        token_values.insert("name".to_string(), encode(name.as_str()).to_string());
 
         let path = strfmt(
-            "/assets/v1/organizations/2475245830233/templates/fields",
+            "/assets/v1/organizations/{organizationId}/templates/fields",
             &token_values,
         )
         .unwrap();
@@ -1329,6 +1334,7 @@ impl Client {
         log::trace!("POST {}", url);
         let request = MetadataDefinition {
             name: name.to_owned(),
+            display_name: name.to_owned(),
             value_type: "text".to_string(),
         };
 
@@ -1352,6 +1358,11 @@ impl Client {
             log::trace!("Response: {}", content);
             Ok(())
         } else {
+            let content = response.text().await;
+            match content {
+                Ok(content) => log::error!("Error: {}", content.to_string()),
+                Err(_) => (),
+            }
             Err(ClientError::UnexpectedResponse(status))
         }
     }

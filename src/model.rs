@@ -321,6 +321,8 @@ pub struct MetadataEntry {
 pub struct MetadataDefinition {
     #[serde(rename = "name")]
     pub name: String,
+    #[serde(rename = "displayName")]
+    pub display_name: String,
     #[serde(rename = "type")]
     pub value_type: String,
 }
