@@ -508,7 +508,7 @@ uamcli asset search --asset-id '65fb2b9c862ec38597b4840A' --asset-version '1'
 
 If you do not provide the version (optional) the default version number of '1' will be assumed.
 
-**_👉 NOTE:_**z
+**_👉 NOTE:_**
 You cannot specify both a name and ID in the same query.
 
 
@@ -516,6 +516,9 @@ You cannot specify both a name and ID in the same query.
 
 An asset contains files, but also can have metadata, which is a collection of key/value pairs that are used to describe the contents. For example, you may have a property named "Material" that indicates the type of material used
 to make a 3D object.
+
+**_👉 NOTE:_**
+The Unity Asset Manager requires that the metadata property names (i.e. keys) do not contain space characters. For example, you may have name "Vendor", but hyou should avoid name like "Main Supplier". Although no error will be generated, this property name would not be accessible later.
 
 While the Unity Asset Manager allows for metadata properties to be declared of different types, the current version UAMCLI only supports text fields. This was done to satisfy a specific requirement of a downstream process. Future versions
 may add support for other types (e.g. boolean, etc.).
@@ -563,7 +566,7 @@ uamcli asset metadata upload --asset-id 65a7d8646e7591cfd372ee51 --asset-version
 
 If successful, there is no output. Once the command completes, the asset will contain the three metadata properties with their respective values.
 
-**_👉 NOTE:_**z
+**_👉 NOTE:_**
 At the time of writing the Unity Asset Manager is still in beta. Only previously registered metadata field definitions can be used. Make sure you add those definitions to your Unity organization before
 attempting to assign values to them.
 In the future we should be able to automatically register new metadata field definitions as needed.

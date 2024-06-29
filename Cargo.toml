@@ -1,6 +1,6 @@
 [package]
 name = "uamcli"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2021"
 authors = ["Julian Chultarsky <jchultarsky@physna.com>"]
 description = "Command Line Interface for the Unity Asset Manager"
