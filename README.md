@@ -591,6 +591,44 @@ You could save this into the same CSV file format with the header using NuShell:
 uamcli asset get --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 | from json | get metadata | columns | each {|c| [['Name', 'Value']; [$c, ($props | get $c)]]} | flatten | to csv | save data/metadata/metadata2.csv
 ````
 
+### Deleting metadata
+
+To delete metadata fields associated with an asset, you can use:
+
+```bash
+ uamcli help asset metadata delete
+```
+```
+Deletes metadata associated with an asset
+
+Usage: uamcli asset metadata delete [OPTIONS] --asset-id <asset-id> --meta <meta>...
+
+Options:
+      --asset-id <asset-id>            Asset ID
+      --asset-version <asset-version>  Asset version [default: 1]
+      --meta <meta>...                 Metadata property name
+  -h, --help                           Print help
+  -V, --version                        Print versio
+```
+
+Assuming that you have a metadata field named 'test', to delete it you could type something similar to the following:
+
+```bash
+uamcli asset metadata delete --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 --meta test
+```
+
+You can delete multiple properties in one command by providing more than one value for the **--meta** argument:
+
+```bash
+uamcli asset metadata delete --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 --meta test1 --meta test2
+```
+
+or alternativelly, you can provide the same as a comma-seprated values:
+
+```bash
+uamcli asset metadata delete --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 --meta test1,test2
+```
+
 <!-- ROADMAP -->
 ## Roadmap
 
