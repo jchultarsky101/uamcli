@@ -660,12 +660,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "env"
-version = "0.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "876927d21ef1ae98001c8c35a1d8dfd682136914b23ef04276820fa6d43c3630"
-
-[[package]]
 name = "env_logger"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2368,7 +2362,6 @@ dependencies = [
  "configuration",
  "csv",
  "dirs",
- "env",
  "futures",
  "keyring",
  "log",
