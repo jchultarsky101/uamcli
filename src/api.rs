@@ -292,6 +292,33 @@ impl Api {
         }
     }
 
+    pub async fn delete_asset_metadata(
+        &mut self,
+        identity: &AssetIdentity,
+        keys: &Vec<String>,
+    ) -> Result<(), ApiError> {
+        self.init().await?;
+        log::trace!("Deleting asset metadata for asset {}...", identity.id());
+
+        match &self.client {
+            Some(client) => {
+                let asset = client.get_asset(identity).await?;
+
+                match asset {
+                    Some(asset) => {
+                        log::trace!("The asset exists");
+
+                        client.delete_metadata(&asset.identity(), keys).await?;
+
+                        Ok(())
+                    }
+                    None => Err(ApiError::AssetNotFound),
+                }
+            }
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
     /// Generates thumbnails and previews for the specified asset..
     ///
     /// Parameters:

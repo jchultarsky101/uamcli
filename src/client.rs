@@ -1093,6 +1093,57 @@ impl Client {
         }
     }
 
+    pub async fn delete_metadata(
+        &self,
+        identity: &AssetIdentity,
+        keys: &Vec<String>,
+    ) -> Result<(), ClientError> {
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        token_values.insert("assetId".to_string(), identity.id());
+        token_values.insert("assetVersion".to_string(), identity.version());
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/assets/{assetId}/versions/{assetVersion}/fields",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        let keys: String = keys.join(",");
+
+        log::trace!("Deleting asset metadata {}...", &keys);
+        log::trace!("DELETE {}", url);
+
+        let response = self
+            .http
+            .delete(url)
+            .query(&vec![("metadata".to_string(), keys)])
+            .header("cache-control", "no-cache")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+
+            log::trace!("Response: {}", content);
+            Ok(())
+        } else {
+            let content = response.text().await;
+            match content {
+                Ok(content) => log::error!("Error: {}", content),
+                Err(_) => (),
+            }
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
     /// Sets the status of an existing asset.
     ///
     /// Parameters:

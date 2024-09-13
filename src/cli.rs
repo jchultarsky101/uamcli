@@ -44,6 +44,7 @@ const PARAMETER_DATA_FILE: &str = "data";
 const PARAMETER_STATUS: &str = "status";
 const PARAMETER_PUBLISH: &str = "publish";
 const PARAMETER_ASSET_NAME: &str = "asset-name";
+const PARAMETER_METADATA_KEY: &str = "meta";
 
 const BANNER: &'static str = r#"
 ╦ ╦╔═╗╔╦╗  ╔═╗╦  ╦
@@ -112,11 +113,20 @@ impl Cli {
         let asset_id_parameter = Arg::new(PARAMETER_ASSET_ID)
             .long(PARAMETER_ASSET_ID)
             .required(true)
+            .action(ArgAction::Set)
             .help("Asset ID");
         let asset_version_parameter = Arg::new(PARAMETER_ASSET_VERSION)
             .long(PARAMETER_ASSET_VERSION)
-            .required(true)
+            .required(false)
+            .default_value("1")
             .help("Asset version");
+        let metadata_key_parameter = Arg::new(PARAMETER_METADATA_KEY)
+            .long(PARAMETER_METADATA_KEY)
+            .required(true)
+            .num_args(1..)
+            .value_delimiter(',')
+            .action(clap::ArgAction::Append)
+            .help("Metadata property name");
 
         Command::new(env!("CARGO_PKG_NAME"))
             .version(env!("CARGO_PKG_VERSION"))
@@ -266,6 +276,7 @@ impl Cli {
                             .about("Metadata operations")
                             .subcommand(
                                 Command::new(COMMAND_UPLOAD)
+                                    .about("Uploads metadata for an asset")
                                     .arg(asset_id_parameter.clone())
                                     .arg(asset_version_parameter.clone())
                                     .arg(
@@ -276,6 +287,13 @@ impl Cli {
                                             .help("File containing the metadata in CSV format with two columns: NAME, VALUE")
                                             .value_parser(clap::value_parser!(PathBuf)),
                                     ),
+                            )
+                            .subcommand(
+                                Command::new(COMMAND_DELETE)
+                                    .about("Deletes metadata associated with an asset")
+                                    .arg(asset_id_parameter.clone())
+                                    .arg(asset_version_parameter.clone())
+                                    .arg(metadata_key_parameter.clone()),
                             )
                     )
                     .subcommand(
@@ -290,7 +308,7 @@ impl Cli {
                             .arg(Arg::new(PARAMETER_ASSET_VERSION)
                                 .help("Asset version. Required if an asset ID is provided")
                                 .long(PARAMETER_ASSET_VERSION)
-                                .requires(PARAMETER_ASSET_ID)
+                                .requires(PARAMETER_ASSET_VERSION)
                                 .required(false)
                                 .default_value("1")
                                 .action(ArgAction::Set)
@@ -450,6 +468,17 @@ impl Cli {
                             sub_matches.get_one::<PathBuf>(PARAMETER_DATA_FILE).unwrap();
 
                         let _ = api.upload_asset_metadata(&identity, data_file_path).await?;
+                    }
+                    Some((COMMAND_DELETE, sub_matches)) => {
+                        let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();
+                        let version = sub_matches
+                            .get_one::<String>(PARAMETER_ASSET_VERSION)
+                            .unwrap();
+                        let identity = AssetIdentity::new(id.to_owned(), version.to_owned());
+                        let keys = sub_matches.get_many::<String>(PARAMETER_METADATA_KEY).map(|iter| iter.cloned().collect::<Vec<String>>()).unwrap();
+
+
+                        let _ = api.delete_asset_metadata(&identity, &keys).await?;
                     }
                     _ => unreachable!("Invalid subsommand for 'asset metadata'"), // this will never be reached because the command is validated first
                 },
