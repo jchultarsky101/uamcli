@@ -257,6 +257,18 @@ impl Cli {
                             ),
                     )
                     .subcommand(
+                        Command::new(COMMAND_DELETE)
+                            .about("Delete asset(s) from the project")
+                            .arg(
+                                Arg::new(PARAMETER_ASSET_ID)
+                                    .long(PARAMETER_ASSET_ID)
+                                    .num_args(1..)
+                                    .value_delimiter(',')
+                                    .action(clap::ArgAction::Append)
+                                    .help("Asset UUID")
+                            )
+                    )
+                    .subcommand(
                         Command::new(COMMAND_STATUS)
                             .about("Status operations on an asset")
                             .subcommand(
@@ -420,6 +432,11 @@ impl Cli {
                         .await?;
                     let json = serde_json::to_string(&result).unwrap();
                     println!("{}", json);
+                }
+                Some((COMMAND_DELETE, sub_matches)) => {
+                    let asset_ids: Vec<String> = sub_matches.get_many::<String>(PARAMETER_ASSET_ID).unwrap().cloned().collect();
+                    
+                    api.delete_asset(asset_ids).await?;
                 }
                 Some((COMMAND_GET, sub_matches)) => {
                     let id = sub_matches.get_one::<String>(PARAMETER_ASSET_ID).unwrap();

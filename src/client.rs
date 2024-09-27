@@ -271,6 +271,20 @@ impl Into<Asset> for AssetResponse {
     }
 }
 
+#[derive(Debug, Serialize)]
+struct AssetDeleteRequest {
+    #[serde(rename = "assetIds")]
+    asset_ids: Vec<String>,
+}
+
+impl AssetDeleteRequest {
+    pub fn new(asset_ids: Vec<String>) -> Self {
+        Self {
+            asset_ids: asset_ids.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 struct AssetSearchResponse {
     #[serde(rename = "next")]
@@ -1067,6 +1081,52 @@ impl Client {
         let response = self
             .http
             .patch(url)
+            .header("cache-control", "no-cache")
+            .timeout(Duration::from_secs(30))
+            .basic_auth(
+                self.client_id.to_owned(),
+                Some(self.client_secret.to_owned()),
+            )
+            .json(&request)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if status.is_success() {
+            let content = response.text().await?;
+
+            log::trace!("Response: {}", content);
+            Ok(())
+        } else {
+            let content = response.text().await;
+            match content {
+                Ok(content) => log::error!("Error: {}", content),
+                Err(_) => (),
+            }
+            Err(ClientError::UnexpectedResponse(status))
+        }
+    }
+
+    pub async fn delete_asset(&self, asset_ids: Vec<String>) -> Result<(), ClientError> {
+        let mut url: String = UNITY_PRODUCTION_SERVICES_BASE_URL.to_string();
+        let mut token_values: HashMap<String, String> = HashMap::new();
+        token_values.insert("projectId".to_string(), self.project_id.to_owned());
+        let path = strfmt(
+            "/assets/v1/projects/{projectId}/assets/unlink",
+            &token_values,
+        )
+        .unwrap();
+        url.push_str(path.as_str());
+
+        log::trace!("Deleting asset(s)...");
+        log::trace!("POST {}", url);
+
+        let request: AssetDeleteRequest = AssetDeleteRequest::new(asset_ids);
+        log::trace!("Request: {:?}", request);
+
+        let response = self
+            .http
+            .post(url)
             .header("cache-control", "no-cache")
             .timeout(Duration::from_secs(30))
             .basic_auth(

@@ -146,6 +146,19 @@ impl Api {
         }
     }
 
+    pub async fn delete_asset(&mut self, asset_ids: Vec<String>) -> Result<(), ApiError> {
+        self.init().await?;
+        log::trace!("Deleting asset {}...", asset_ids.join(","));
+
+        match &self.client {
+            Some(client) => {
+                client.delete_asset(asset_ids).await?;
+                Ok(())
+            }
+            None => Err(ApiError::ClientNotInitialized),
+        }
+    }
+
     /// Returns an Option<Asset>
     ///
     /// If an asset with the required identity exists, it will return the asset.
