@@ -629,6 +629,40 @@ or alternativelly, you can provide the same as a comma-seprated values:
 uamcli asset metadata delete --asset-id 65a7d8646e7591cfd372ee51 --asset-version 1 --meta test1,test2
 ```
 
+### Deleting asset
+
+To delete all data associated with an asset (for all of its versions),  you can use:
+
+```bash
+ uamcli help asset delete
+```
+```
+Delete asset(s) from the project
+
+Usage: uamcli asset delete [OPTIONS]
+
+Options:
+      --asset-id <asset-id>...  Asset UUID
+  -h, --help                    Print help
+  -V, --version                 Print version
+```
+
+NOTE: Be aware that this operation is irreversable.
+
+```bash
+uamcli asset delete --asset-id 65a7d8646e7591cfd372ee51
+```
+
+The operation does not return any data. You can provide multiple asset IDs in the same line by specifying multiple --asset-id arguments, or just a single argument with multiple values seprated by a comma. The following ways are equivalent:
+
+```bash
+uamcli asset delete --asset-id 65a7d8646e7591cfd372ee51 --asset-id 88a7d8646e7591cfd372ee70
+```
+
+```bash
+uamcli asset delete --asset-id "65a7d8646e7591cfd372ee51,88a7d8646e7591cfd372ee70"
+```
+
 <!-- ROADMAP -->
 ## Roadmap
 
