@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## v0.1.14
+## v0.1.15
 
 * Added delete command for assets
+* Upgraded CI/CD pipeline
 
 ## v0.1.13
 
