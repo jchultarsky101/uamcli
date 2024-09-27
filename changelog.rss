@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>uamcli Changelog</title><link>http://127.0.0.1:7979/uamcli/changelog</link><description>Changelog information for uamcli</description><category domain="https://github.com/jchultarsky101/uamcli.git">uamcli Changelog</category><atom:link href="http://127.0.0.1:7979/uamcli/changelog.rss" rel="self"/><item><title>v0.1.15</title><link>http://127.0.0.1:7979/uamcli/changelog/v0.1.15</link><category domain="https://github.com/jchultarsky101/uamcli.git">uamcli Changelog</category><guid>http://127.0.0.1:7979/uamcli/changelog/v0.1.15</guid><content:encoded><![CDATA[<ul>
+<li>Added delete command for assets</li>
+<li>Upgraded CI/CD pipeline</li>
+</ul>
+]]></content:encoded></item><item><title>v0.1.13</title><link>http://127.0.0.1:7979/uamcli/changelog/v0.1.13</link><category domain="https://github.com/jchultarsky101/uamcli.git">uamcli Changelog</category><guid>http://127.0.0.1:7979/uamcli/changelog/v0.1.13</guid><content:encoded><![CDATA[<ul>
+<li>Added delete command for metadata</li>
+</ul>
+]]></content:encoded></item><item><title>v0.1.12</title><link>http://127.0.0.1:7979/uamcli/changelog/v0.1.12</link><category domain="https://github.com/jchultarsky101/uamcli.git">uamcli Changelog</category><guid>http://127.0.0.1:7979/uamcli/changelog/v0.1.12</guid><content:encoded><![CDATA[<ul>
+<li>Upgraded the CI/CD pipeline</li>
+<li>Updated documentation</li>
+</ul>
+]]></content:encoded></item><item><title>v0.1.11</title><link>http://127.0.0.1:7979/uamcli/changelog/v0.1.11</link><category domain="https://github.com/jchultarsky101/uamcli.git">uamcli Changelog</category><guid>http://127.0.0.1:7979/uamcli/changelog/v0.1.11</guid><content:encoded><![CDATA[<ul>
+<li>Updated to support changes in the Unity API related to new versioning schema</li>
+</ul>
+]]></content:encoded></item><item><title>v0.1.10</title><link>http://127.0.0.1:7979/uamcli/changelog/v0.1.10</link><category domain="https://github.com/jchultarsky101/uamcli.git">uamcli Changelog</category><guid>http://127.0.0.1:7979/uamcli/changelog/v0.1.10</guid><content:encoded><![CDATA[<ul>
+<li>Added support for more binary installers</li>
+</ul>
+]]></content:encoded></item><item><title>v0.1.7</title><link>http://127.0.0.1:7979/uamcli/changelog/v0.1.7</link><category domain="https://github.com/jchultarsky101/uamcli.git">uamcli Changelog</category><guid>http://127.0.0.1:7979/uamcli/changelog/v0.1.7</guid><content:encoded><![CDATA[<p>Bug fixes:</p>
+<ul>
+<li>Setting the asset type to '3D Model' when uploading 3D CAD files</li>
+<li>Resolved a bug causing files not to be recognized as 3D models</li>
+</ul>
+]]></content:encoded></item></channel></rss>
